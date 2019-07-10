@@ -1,0 +1,605 @@
+---
+title             : "Does Your Gain Define My Loss?: Socially-Defined Counterfactual Loss and Prevention-Focused Decision-Making"
+shorttitle        : "Social Counterfactual Loss and Prevention Focus"
+
+author: 
+  - name          : "Emily Nakkawita"
+    affiliation   : "a"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Columbia University, Psychology Department, 406 Schermerhorn Hall, 1190 Amsterdam Ave. MC 5501, New York, NY 10027, USA"
+    email         : "ebn2111@columbia.edu"
+  - name          : "Frank Mathmann"
+    affiliation   : "b"
+  - name          : "E. Tory Higgins"
+    affiliation   : "a"
+
+affiliation:
+  - id            : "a"
+    institution   : "Columbia University"
+  - id            : "b"
+    institution   : "Queensland University of Technology"
+
+authornote: |
+  a Columbia University, Psychology Department, 406 Schermerhorn Hall, 1190 Amsterdam Ave. MC 5501, New York, NY 10027, USA
+  
+  b Queensland University of Technology, QUT Business School, School of Advertising, Marketing, and Public Relations, GPO Box 2434, Brisbane, Queensland 4001, Australia
+  
+  Declarations of interest: none
+
+abstract: |
+  How do individual differences in motivation relate to risky decision-making? This article focuses on cases of a socially-defined counterfactual loss—situations in which the people in one’s social context experience a gain, and this successful state functions as a new “status quo” reference point against which the individual falls short. Although a prevention focus is known to predict risky investment behavior following *actual* loss [@scholeretal2010], there is as yet no research exploring whether a prevention focus similarly predicts risk-taking after this kind of *counterfactual* loss. The objective of the present study was to explore this relation within a real-world situation in which participants invested in Bitcoin, a risky asset. Results revealed that stronger chronic prevention focus predicted decreased risk-taking among participants who experienced a counterfactual loss; no such effect was detected among a control group (to dynamically visualize model-predicted effects, see http://regfocusrisk.com). Further, this effect was mediated by hypothetical feelings of relief when imagining that one had previously invested in Bitcoin. This research extends previous findings on the relationship between regulatory focus and risk-seeking, and offers implications for everyday decision-making. Data and syntax can be found at https://osf.io/e4nr3/?view_only=73c8490e19c6449197d2620d29ea8ad2 [de-anonymized URL to be provided following blind peer review].
+  
+keywords          : "motivation, self-regulation, regulatory focus, prevention, decision-making, risk, counterfactual thinking"
+wordcount         : "4,952"
+
+bibliography      : ["rfcfloss.bib"]
+
+floatsintext      : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : no
+mask              : no
+draft             : no
+
+header-includes   :
+  - \usepackage{setspace}
+  - \usepackage{makecell}
+  - \raggedbottom
+
+documentclass     : "apa6"
+classoption       : "man"
+output            : papaja::apa6_pdf
+---
+
+```{r setup, warning = FALSE, message = FALSE}
+# Load packages
+library(knitr) # Required for knitting
+library(papaja) # Required for APA template
+library(citr) # Required for easy insertion of citations
+library(tidyverse) # Required for data cleaning
+library(broman) # Required for myround() function that doesn't truncate digits
+library(rIP) # Required to filter out fraudulent M-Turk participants
+library(psych) # Required to calculate Cronbach's alpha
+library(cocron) # Required to statistically compare Cronbach's alphas
+library(broom) # Required to extract effects from models
+library(kableExtra) # Required for table styling
+library(ggplot2) # Required for plots
+library(shiny) # Required to properly cite shiny when referencing our data visualization app
+library(jtools) # Required for Johnson-Neyman and simple slopes analyses
+library(cowplot) # Required for sim_slopes
+library(boot) # Required for bootstrapping CIs in mediation analysis
+library(lavaan) # Required for mediation analyses
+
+# Seed for random number generation
+set.seed(1234)
+
+# Set knitr options
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, include = FALSE, message = FALSE)
+knitr::opts_knit$set(root.dir = normalizePath('../'))
+
+# Functions
+pval <- function(x) {
+  if (x >= .05) {
+  result <- "n.s."
+  }
+  else if (x < .05 & x >= .01) {
+  result <- "p < .05"
+  }
+  else if (x < .01 & x >= .001) {
+  result <- "p < .01"
+  }
+  else {
+  result <- "p < .001"
+  }
+  return(result)
+}
+```
+
+# 1.  Introduction
+
+How do people determine how their goal pursuits are going? A large body of research suggests that reference points play a critical role in this process [e.g., @bonezzietal2011; @heathetal1999]. These reference points function as self-evaluative standards [@higginsetal1986a] and influence whether a person decides to take or avoid a risk [@higginsliberman2018]. Although these reference points are often rooted in *personal* standards, they can also be defined by the *social* context [@higginsetal1986a]. Consider a case in which the value of the risky cryptocurrency Bitcoin spikes. Upon hearing that friends profited from this increase, people with no investments in Bitcoin may be upset not to have obtained these same benefits. In this case, while these investors have not actually lost anything, their peers have set a new status quo below which they fall—a situation we define as a *counterfactual loss*.
+
+But what predicts how a given investor will respond to such a situation? Some people might engage in risky behavior (e.g., investing a large sum in Bitcoin) in an attempt to reach this new status quo. In contrast, others may recommit themselves to a risk-averse investing strategy. To answer this question, we investigated whether individual differences that influence responses to *actual* loss might similarly predict responses to *counterfactual* loss.
+
+One such individual difference variable is a prevention focus. The prevention system is strategically oriented toward the avoidance of actual loss as it is motivated by fundamental needs for safety and security [@higgins1997]. A prevention focus is also known to influence one’s tendency to make risky choices: Although generally risk-averse in the investment domain [@zouscholer2016], people high in prevention tend to take greater risks after incurring a loss in an effort to bring themselves back to baseline [@scholeretal2010].
+
+This kind of loss is different from *counterfactual* loss because counterfactual loss does not actually threaten individuals’ safety. However, given the high relevance of actual loss states to prevention-focused people, we were curious if they would respond to counterfactual losses in a similar way. As a result, the purpose of the present study was to investigate the relationship between regulatory focus and risky decision-making following counterfactual loss within an ecologically-valid investing paradigm. This work is important because risky choices may result in undesirable consequences, and follow-up research might reveal how individuals could mitigate these tendencies.
+
+## 1.1.  Regulatory Focus Theory
+
+Regulatory focus theory posits two distinct motivational orientations that vary based upon the end-states at which self-regulatory efforts are directed: A *prevention* focus involves strategic concerns with *negative* outcomes like losses, whereas a *promotion* focus reflects strategic concerns with *positive* outcomes like gains [@higgins1997]. Prevention-focused people are interested in maintaining a satisfactory status quo (“0”) and avoiding worse states (“–1”); in contrast, promotion-focused people are interested in moving from their status quo (“0”) to a better state [“+1”; @higgins2018]. These individual difference variables predict unique patterns of goal-directed thinking and behavior [see @higginscornwell2016, for a review].
+
+### 1.1.1.  Regulatory focus and risky decision-making.
+Prevention and promotion are also associated with distinct risk-seeking tendencies. As briefly described above, prevention predicts risk-taking in the face of loss [@scholeretal2010]. In these studies, after experiencing an initial financial loss, participants chose between two stocks with explicitly-stated odds—both of which offered the same expected value but different levels of risk. Results suggested that a prevention focus predicted selection of the riskier stock in cases when this option provided the only chance of recouping previous losses and returning to the status quo. However, when a less risky option offered this same possibility, prevention was associated with risk aversion. [Similar associations exist between promotion and risk-seeking in cases of recent gains; see @zouetal2014.]
+
+Because actual and counterfactual loss may produce similar internal experiences, we expected that the prevention system might operate similarly in both cases. As a result, we primarily hypothesized that a prevention focus will predict *greater* risky behavior following counterfactual loss, such that people high in prevention will take larger risks in attempting to recover the “lost” amount when the risky action offers the sole chance to attain the new socially-determined satisfactory state. In the present research, we intended to provide such an opportunity through the ability to invest in Bitcoin.
+
+However, an alternate account is also feasible. As described above, in cases when no option exists to *fully* recover a loss, prevention is associated with risk aversion [@scholeretal2010]. If participants do not believe that the risky asset offers the opportunity to fully recover the counterfactual loss, we would predict the reverse effect, whereby participants high in prevention will engage in *less* risky behavior in the case of counterfactual loss.
+
+### 1.1.2.  Regulatory focus and emotion.
+Emotions relating to the counterfactual situation may provide insight into the underlying mechanism because emotional experiences vary based upon regulatory focus. In the domain of prevention, success is typically associated with quiescence-related emotions (e.g., relief), while failure is accompanied by agitation-related emotions [e.g., nervousness; @higgins1996d]. Further, experiences on this quiescence-agitation spectrum increase in frequency and intensity with prevention strength [@higginsetal1997].
+
+To investigate these emotional experiences, we asked participants to imagine how they would feel if they had invested in Bitcoin earlier. Given our interest in prevention, we were especially interested in hypothetical *relief*, which we expect would be rooted in imagined anxiety about what might have happened differently. As a result, participants’ willingness to actually experience that level of anxiety by making a risky investment today may be mediated by this hypothetical relief. With this said, we did not pre-register any hypotheses regarding mediation; these analyses were exploratory.
+
+# 2.  Methods
+
+```{r load}
+# START HERE iF NOT INTERESED IN RECLEANING
+load(file = "data/rfcfloss_clean.RData")
+load(file = "data/rfcfloss_coded.RData")
+```
+
+## 2.1.  Participants
+
+A pilot study examining the interaction between prevention and risk-taking in cases of counterfactual loss suggested an $f^2$ effect size of 0.021. A power analysis suggested a sample size of 462; to account for attrition, we enrolled 500 participants. (See https://osf.io/e4nr3/?view_only=73c8490e19c6449197d2620d29ea8ad2 for pre-registered sample size, analysis plans, data, and syntax [de-anonymized URL to be provided following blind peer review].)
+
+```{r bit.na}
+## Excluding participants who did not submit a Bitcoin allocation percentage (our DV)
+cflorig.alloexcl <- cflorig[ which(is.na(cflorig$allo) == FALSE ) , ] # n = 482 remaining
+```
+
+```{r prev.na}
+## Excluding participants who did not complete prevention items (our moderator of interest)
+cflorig.prevexcl <- cflorig.alloexcl[ which(is.na(cflorig.alloexcl$prev) == FALSE ) , ] # n = 481 remaining
+
+cflorig.ivdvexcl.n <- 500 - nrow(cflorig.prevexcl)
+```
+
+```{r ip}
+cflexcl <- cflorig.prevexcl
+# blockornot <- getIPinfo(cflexcl1, "IPAddress", "[key]")
+# Anyone looking to rerun the line of code above will need to secure a free X-key
+# from iphub.info and place it within the quotes
+
+# blockornot <- dplyr::rename(blockornot, IPAddress = ip)
+cflexcl <- merge(cflexcl, blockornot, by = "IPAddress") # n = 481 (still the same as in previous chunk -- just added columns in this line of code)
+
+## Determining participants flagged as block = (1 or 2) vs. 1 only
+cflexcl$block12 <- ifelse(cflexcl$block == "0", 0, 1)
+cflexcl$block <- as.numeric(cflexcl$block)
+cflexcl$block.d <- ifelse(cflexcl$block == 1, 1, 0)
+```
+
+```{r ipblock}
+cflexcl.blocked <- cflexcl[cflexcl$block.d == 0,] # n = 334
+cflexcl.blocked.usonly <- cflexcl.blocked[cflexcl.blocked$countryCode == "US",] # n = 301
+cfl.ipexcl <- cflexcl.blocked.usonly
+
+cflexcl.allblocked.n <- nrow(cflorig.prevexcl) - nrow(cfl.ipexcl) # n = 180
+```
+
+```{r subset1}
+cfl.noprevinv <- subset(cfl.ipexcl, previnvested != 1)
+cfl.noprevinv.pct <- myround((nrow(cfl.ipexcl)-nrow(cfl.noprevinv))/nrow(cfl.ipexcl) * 100, digits = 2)
+```
+
+```{r subset2}
+cfl.didntlearn <- subset(cfl.ipexcl, told_test != 1) # n = 295
+cfl.didntlearn.n <- nrow(cfl.ipexcl)-nrow(cfl.didntlearn) # n = 6
+cfl.didntlearn.pct <- myround((nrow(cfl.ipexcl)-nrow(cfl.didntlearn))/nrow(cfl.ipexcl) * 100, digits = 2)
+```
+
+```{r subset3}
+# cfl <- subset(cfl, previnvested != 1) NOT EXCLUDED BECAUSE >10%
+cfl.rerun <- cfl.ipexcl # n = 301
+cfl <- subset(cfl.ipexcl, told_test != 1) # n = 295
+```
+
+
+```{r n}
+n <- length(unique(cfl$ResponseId))
+```
+
+```{r age}
+meanage <- mean(cfl$age, na.rm = TRUE)
+sdage <- sd(cfl$age, na.rm = TRUE)
+maxage <- max(cfl$age, na.rm = TRUE)
+minage <- min(cfl$age, na.rm = TRUE)
+```
+
+```{r gender}
+male <- sum(cfl$gender == "male")
+female <- sum(cfl$gender == "female")
+malepct <- myround(male/nrow(cfl)*100, digits = 2)
+femalepct <- myround(female/nrow(cfl)*100, digits = 2)
+```
+
+Data collection took place in September 2018. Using Amazon Mechanical Turk (“M-Turk”), we recruited U.S. workers at least 18 years old. Per our pre-defined exclusion criteria, `r cflorig.ivdvexcl.n` participants were excluded for not completing our primary measures. Additionally, `r cflexcl.allblocked.n` participants were excluded for fraudulent IP addresses.[^1] Finally, we excluded `r cfl.didntlearn.n` participants who learned about the study from other M-Turk workers (although all analyses were also run including this last group to ensure key findings did not change). These exclusions left a sample of `r n` participants ($M_{age} = `r meanage`$; `r malepct`% male).
+
+[^1]: At the time of this study, data quality issues had recently surfaced on M-Turk due to foreign workers' use of Virtual Private Servers [see, for example, @kennedyetal2018]. As a result, we examined our dataset for fraudulent responses based on participant IP addresses using using the R-package *rIP* [Version 0.1.1; @R-rIP]. (See Supplementary Materials for more detail on this investigation.) Due to significant reliability issues among the responses flagged as fraudulent, we excluded these participants.
+
+## 2.2.  Material
+```{r rf}
+prommean <- myround(mean(cfl$prom), digits = 2)
+promsd <- myround(sd(cfl$prom), digits = 2)
+prevmean <- myround(mean(cfl$prev), digits = 2)
+prevsd <- myround(sd(cfl$prev), digits = 2)
+```
+
+### 2.2.1.  Regulatory focus pride.
+To measure chronic historical effectiveness (i.e., “pride”) in the domains of prevention and promotion, we administered the Regulatory Focus Questionnaire ["RFQ"; @higginsetal2001]. The RFQ consists of five prevention-related items (e.g., “Not being careful enough has gotten me into trouble at times”) and six promotion-related items (e.g., “I feel like I have made progress toward being successful in my life”) to which participants respond on five-point scales ranging from 1 (*never or seldom* or *certainly false*) to 5 (*very often* or *certainly true*). Mean endorsement levels were calculated for each participant  ($M_{prevention pride} = `r prevmean`$; $SD_{prevention pride} = `r prevsd`$; $M_{promotion pride} = `r prommean`$; $SD_{promotion pride} = `r promsd`$). We then centered these variables by subtracting these means from each score.
+
+### 2.2.2.  Counterfactual loss manipulation.
+Participants were randomly assigned to one of two experimental conditions: counterfactual loss versus control. After an introduction to an investing app that they would beta-test, participants in the counterfactual loss condition were notified that they were joining a test-in-progress on Day 4, while participants in the control condition were simply welcomed to Day 1 of the beta-test:
+
+> **[Counterfactual Loss:]** Please note that you will be joining on Day 4, as we expanded the testing group midway through the beta-test in order to receive feedback from a larger group of participants. Despite any earnings or losses that the original group of M-Turk participants may have incurred since Day 1, you will be starting today with your \$1 bonus—as if this \$1 was kept in savings (i.e., with 0% invested in Bitcoin) over the last three days.
+
+> **[Control:]** We welcome you and your fellow participants to Day 1 of our beta-test!
+
+Next, all participants learned that Bitcoin had risen in price over the previous three days. This information was framed differently in each condition. Participants in the counterfactual loss condition were told that fellow M-Turk participants who joined the testing group at an earlier date and invested at 100% had already increased the value of their own \$1 investments to \$1.61; in contrast, participants in the control condition who believed they were joining the test on Day 1 learned that \$1 would have *hypothetically* grown to \$1.61 during the same timeframe (see Figure\ \@ref(fig:manip)). Additionally, to reinforce that their present state fell below the reference point set by their M-Turk peers, participants in the counterfactual loss condition also saw a flat line indicating their current status.
+
+```{r manip, include = TRUE, fig.cap = "Bitcoin performance update as presented in counterfactual loss versus control conditions.", fig.align = "center", out.width = '90%', out.height = '90%'}
+knitr::include_graphics("../img/manip.png")
+```
+
+### 2.2.3.  Assessment of risky investment behavior.
+The dependent measure in this study was the percentage of participants’ $1 bonus allocated to Bitcoin. Participants indicated this percentage using a slider ranging from 0% (i.e., no investment in Bitcoin; all money kept in savings) to 100% (i.e., full investment in Bitcoin; no money kept in savings).
+
+```{r cfthoughts}
+investearliermean <- myround(mean(cfl$investearlier, na.rm = TRUE), digits = 2)
+investearliersd <- myround(sd(cfl$investearlier, na.rm = TRUE), digits = 2)
+missedoutmean <- myround(mean(cfl$missedout, na.rm = TRUE), digits = 2)
+missedoutsd <- myround(sd(cfl$missedout, na.rm = TRUE), digits = 2)
+regretmean <- myround(mean(cfl$regret, na.rm = TRUE), digits = 2)
+regretsd <- myround(sd(cfl$regret, na.rm = TRUE), digits = 2)
+happiermean <- myround(mean(cfl$happier, na.rm = TRUE), digits = 2)
+happiersd <- myround(sd(cfl$happier, na.rm = TRUE), digits = 2)
+relievedmean <- myround(mean(cfl$relieved, na.rm = TRUE), digits = 2)
+relievedsd <- myround(sd(cfl$relieved, na.rm = TRUE), digits = 2)
+```
+
+### 2.2.4.  Counterfactual thought and hypothetical emotion measures.
+To probe the underlying mechanism, we included several single-item measures examining the counterfactual thoughts participants generated while making their allocations, which were adapted from items used in past research on regret [@inmanzeelenberg2002]. General counterfactual thinking was assessed by asking participants if they would invest in Bitcoin earlier if they could “do it over” (1 = *definitely wouldn't* to 5 = *definitely would*; $M = `r investearliermean`$; $SD = `r investearliersd`$). We then measured the degree to which participants felt that they missed out by not investing in Bitcoin earlier (1 = *haven't missed out at all* to 5 = *have extremely missed out*; $M = `r missedoutmean`$; $SD = `r missedoutsd`$) and regretted not doing so (1 = *do not regret at all* to 5 = *extremely regret*; $M = `r regretmean`$; $SD = `r regretsd`$).
+
+Additionally, we probed the emotions participants imagined they would feel if they had invested earlier. To assess hypothetical emotion on the prevention-focused quiescence-agitation spectrum, participants rated the degree to which they would be relieved if they had invested in Bitcoin earlier (1 = *not at all happier* to 5 = *extremely happier*; $M = `r happiermean`$; $SD = `r happiersd`$). To assess hypothetical emotion on a separate cheerfulness-dejection spectrum related to promotion, we asked participants if they would be happier if they had invested in Bitcoin earlier (1 = *not at all relieved* to 5 = *extremely relieved*; $M = `r relievedmean`$; $SD = `r relievedsd`$).
+
+## 2.3.  Procedure
+
+This research involved an experimental lab design containing two purportedly separate studies. In Part I, participants responded to questionnaires indicating their regulatory focus, plus a measure of regulatory mode [@kruglanskietal2000] not discussed further here. After completing Part I, all participants were awarded a \$1 bonus and immediately offered the opportunity to invest this bonus in Part II.
+
+After consenting to participate in Part II, participants learned that they would beta-test a new app that enables people to invest real money in Bitcoin. In this app, money is stored in a savings account and users decide what percentage to invest in Bitcoin each day. Any money invested in Bitcoin will fluctuate in value based on the asset’s performance; any money kept in savings will not change in value. The app also provides a daily update on Bitcoin’s performance over the last three days. To ensure this performance was realistic and reflected conditions of counterfactual loss, we explained that because the app had not yet officially launched, performance data in this beta-test would be based on historical market data. (Data reflected actual Bitcoin performance from April 7–9, 2013.)
+
+Next, participants were randomly assigned to one of two experimental conditions. Everyone learned that Bitcoin had risen in price over the previous three days, and the counterfactual loss group was also told that M-Turk participants who joined the test three days earlier had already increased the value of their \$1 investments by \$0.61. Then, participants decided what percentage of their bonus to invest in Bitcoin today. Finally, they answered questions probing counterfactual thinking and provided demographic information, both of which were framed as user feedback on the app. Participants were then debriefed, thanked, and paid.
+
+## 2.4.  Data Analysis
+
+We primarily analyzed the data using regression models in `r cite_r(file = NULL)`. As recommended by Higgins et al. [-@higginsetal2001], our analyses controlled for promotion pride and the interaction between promotion pride and counterfactual loss as both prevention and promotion might realistically relate to our dependent measure.
+
+# 3.  Results
+
+## 3.1.  Primary Analysis
+
+```{r primarymodel}
+rfcfl.promctr <- lm(scale(allo) ~ scale(premc) * scale(condD) + scale(promc) * scale(condD), data = cfl)
+rfcfl.promctr.nonstd <- lm(allo ~ premc * condD + promc * condD, data = cfl)
+```
+
+We were primarily interested in examining if participants’ prevention pride interacted with the experience of counterfactual loss to predict allocation of their funds toward a risky Bitcoin investment. To test our hypothesis, we entered these predictors into a linear regression analysis, the results of which are presented in Table\ \@ref(tab:primarymodelprint). To supplement these results, a visualization of the model is presented in Figure\ \@ref(fig:primarymodelplot); additionally, we provide an application to dynamically generate model predictions online ([Anonymous], 2019).[^2]
+
+[^2]: The application was built using the R-package *shiny* [Version 1.2.0; @R-shiny]. It is located at http://regfocusrisk.com ([Anonymous], 2019; de-anonymized reference to be provided following blind peer review).
+
+```{r primarymodelprint, include = TRUE, results = 'asis'}
+table1 <- tidy(rfcfl.promctr.nonstd)
+table1 <- dplyr::rename(table1, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1$Estimate <- myround(table1$Estimate, digits = 2)
+table1$SE <- myround(table1$SE, digits = 2)
+table1$t <- myround(table1$t, digits = 2)
+table1$p <- myround(table1$p, digits = 3)
+table1$p[table1$p < .001] <- "< .001"
+table1$Predictor[table1$Predictor == "(Intercept)"] <- "Intercept"
+table1$Predictor[table1$Predictor == "premc"] <- "Prevention Pride"
+table1$Predictor[table1$Predictor == "condD"] <- "Counterfactual Loss"
+table1$Predictor[table1$Predictor == "promc"] <- "Promotion Pride"
+table1$Predictor[table1$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1$Predictor[table1$Predictor == "condD:promc"] <- "Promotion Pride x Counterfactual Loss"
+table1[is.na(table1)] <- ""
+table1$order <- c(1, 2, 3, 5, 4, 6)
+table1 <- arrange(table1, order)
+table1$order <- NULL
+apa_table(table1, caption = "Summary of Linear Regression Analysis", note = "This analysis included a dummy-coded variable for the counterfactual loss manipulation: 0 = control, 1 = counterfactual loss. Estimated effect sizes reported here are unstandardized regression coefficients.", align = 'lrrrr')
+
+df <- rfcfl.promctr.nonstd$df.residual
+```
+
+```{r primarymodelplot.prep}
+pred.data.ctrl <- data.frame(premc = seq(min(cfl$premc, na.rm=T), 
+                                         max(cfl$premc, na.rm=T), .1),
+                                         promc = 0, condD = 0, condition = "Control")
+rfcfl.promctr.pred.ctrl <- cbind(pred.data.ctrl, 
+                                 predict(rfcfl.promctr.nonstd, pred.data.ctrl, 
+                                         interval = "confidence", 
+                                         type = c("response", "terms")))
+rfcfl.promctr.pred.ctrl <- dplyr::rename(rfcfl.promctr.pred.ctrl, allo = fit)
+
+pred.data.CFL <- data.frame(premc = seq(min(cfl$premc, na.rm=T), 
+                                        max(cfl$premc, na.rm=T), .1),
+                                        promc = 0, condD = 1, condition = "CF Loss")
+rfcfl.promctr.pred.CFL <- cbind(pred.data.CFL, 
+                                predict(rfcfl.promctr.nonstd, pred.data.CFL, 
+                                        interval = "confidence", 
+                                        type = c("response", "terms")))
+rfcfl.promctr.pred.CFL <- dplyr::rename(rfcfl.promctr.pred.CFL, allo = fit)
+
+primarymodel <- ggplot(data=cfl, aes(x=premc, y=allo)) +
+       scale_color_manual(values=c("gray0", "gray50")) +
+       geom_ribbon(data = rfcfl.promctr.pred.ctrl, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+       geom_ribbon(data = rfcfl.promctr.pred.CFL, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+       geom_line(data = rfcfl.promctr.pred.ctrl, aes(color=condition), size = 1) +
+       geom_line(data = rfcfl.promctr.pred.CFL, aes(color=condition), size = 1) +
+       labs(title="Prevention Pride and Counterfactual Loss as\nPredictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride (Mean-Centered)", y="Bitcoin Allocation (%)", color = "Condition")
+ggsave("img/rfcflplot.png", plot = last_plot(), device = "png", units = "in", width = 6, height = 4.5)
+```
+
+(ref:primarymodelfigcap) Predicted Bitcoin allocation by prevention pride and counterfactual loss experience controlling for promotion pride and the interaction between promotion pride and counterfactual loss. Error bars represent 95% confidence intervals.
+
+```{r primarymodelplot, include = TRUE, fig.cap = "(ref:primarymodelfigcap)", fig.align = "center", out.width = '90%', out.height = '90%'}
+primarymodel
+```
+
+```{r rerun}
+# Original model, rerun to include participants who learned about study from other M-Turkers
+rfcfl.promctr.rerun <- lm(allo ~ premc * condD + promc * condD, data=cfl.rerun)
+table1.rerun <- tidy(rfcfl.promctr.rerun)
+table1.rerun <- dplyr::rename(table1.rerun, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.rerun$Estimate <- myround(table1.rerun$Estimate, digits = 2)
+table1.rerun$p <- myround(table1.rerun$p, digits = 3)
+table1.rerun$p[table1.rerun$p < .001] <- "< .001"
+table1.rerun$Predictor[table1.rerun$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.rerun[is.na(table1.rerun)] <- ""
+```
+
+```{r jn1_simpleslopes}
+jn1 <- sim_slopes(model = rfcfl.promctr.nonstd, pred = premc, modx = condD, modx.values = c(0,1),
+           centered = "all", data = cfl, cond.int = FALSE,
+           johnson_neyman = FALSE, jnplot = FALSE, jnalpha = 0.05, robust = FALSE,
+           digits = getOption("jtools-digits", default = 2), pvals = TRUE,
+           confint = TRUE, ci.width = 0.95)
+jn1 <- tidy(jn1)
+```
+
+```{r jn2}
+rfcfl.promctr.nonctr <- lm(allo ~ prev * condD + promc * condD, data = cfl)
+jn2 <- sim_slopes(model = rfcfl.promctr.nonctr, pred = condD, modx = prev, modx.values = c(2.50991, 3.44, 4.572230),
+           centered = "all", data = cfl, cond.int = FALSE,
+           johnson_neyman = TRUE, jnplot = TRUE, jnalpha = 0.05, robust = FALSE,
+           digits = getOption("jtools-digits", default = 2), pvals = TRUE,
+           confint = TRUE, ci.width = 0.95)
+jncutoff_low <- jn2$jn[[1]]$bounds[1]
+jncutoff_high <- jn2$jn[[1]]$bounds[2]
+jn2 <- tidy(jn2)
+```
+
+The results revealed no main effects, and the interaction between *promotion* pride and counterfactual loss was not significant. However, the analysis yielded a significant two-way interaction between *prevention* pride and counterfactual loss (and this interaction effect remained significant when analyzed including participants who learned about the study from other participants: $B = `r myround(as.numeric(table1.rerun[5,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.rerun[5,"p"]))`$).[^3] To probe the conditional effect of prevention pride at each level of the counterfactual loss variable, we conducted a simple slopes analysis using the R-package *jtools* [Version 1.1.1; @R-jtools]. The effect of prevention pride on Bitcoin allocation was significant in the counterfactual loss condition ($B = `r myround(jn1[1,"estimate"], digits = 2)`, SE = `r myround(jn1[1,"std.error"], digits = 2)`, t = `r myround(jn1[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn1[1,"p.value"]))`$; 95% CI [`r myround(jn1[1,"conf.low"], digits = 4)`, `r myround(jn1[1,"conf.high"], digits = 4)`]) but non-significant in the control condition. These results indicate that, when facing counterfactual loss, as prevention pride increased, participants allocated less to a risky Bitcoin investment.
+
+Additionally, to explore the interaction at different levels of prevention pride ($M = 3.44; SD = 0.89$), we applied the Johnson–Neyman (J–N) technique using using the R-package *jtools* [Version 1.1.1; @R-jtools]. This analysis revealed that the conditional effect of counterfactual loss on Bitcoin allocation was *positive* for people with prevention pride of less than `r myround(jncutoff_low, digits = 2)` ($B = `r myround(jn2[2,"estimate"], digits = 2)`, SE = `r myround(jn2[2,"std.error"], digits = 2)`, t = `r myround(jn2[2,"statistic"], digits = 2)`, `r pval(as.numeric(jn2[2,"p.value"]))`$), and *negative* for people with prevention pride of greater than `r myround(jncutoff_high, digits = 2)` ($B = `r myround(jn2[1,"estimate"], digits = 2)`, SE = `r myround(jn2[1,"std.error"], digits = 2)`, t = `r myround(jn2[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn2[1,"p.value"]))`$). These results suggest that individuals high versus low in prevention pride responded to counterfactual loss in different ways, while people with middling levels of prevention pride did not respond to counterfactual loss.
+
+```{r primarymodel.nopromctr}
+# Not controlling for promotion pride (mean-centered RF and dummy-coded condition)
+rfcfl <- lm(allo ~ premc * condD, data=cfl)
+table1.noprom <- tidy(rfcfl)
+table1.noprom <- dplyr::rename(table1.noprom, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.noprom$Estimate <- myround(table1.noprom$Estimate, digits = 2)
+table1.noprom$p <- myround(table1.noprom$p, digits = 3)
+table1.noprom$p[table1.noprom$p < .001] <- "< .001"
+table1.noprom$Predictor[table1.noprom$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.noprom[is.na(table1.noprom)] <- ""
+```
+
+```{r covariates}
+# Controlling for gender (mean-centered RF and dummy-coded condition)
+rfcfl.promctr.gender <- lm(allo ~ premc * condD + gender + promc * condD, data=cfl)
+table1.gender <- tidy(rfcfl.promctr.gender)
+table1.gender <- dplyr::rename(table1.gender, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.gender$Estimate <- myround(table1.gender$Estimate, digits = 2)
+table1.gender$p <- myround(table1.gender$p, digits = 3)
+table1.gender$p[table1.gender$p < .001] <- "< .001"
+table1.gender$Predictor[table1.gender$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.gender[is.na(table1.gender)] <- ""
+
+# Controlling for age (mean-centered RF and dummy-coded condition)
+rfcfl.promctr.age <- lm(allo ~ premc * condD + age + promc * condD, data=cfl)
+table1.age <- tidy(rfcfl.promctr.age)
+table1.age <- dplyr::rename(table1.age, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.age$Estimate <- myround(table1.age$Estimate, digits = 2)
+table1.age$p <- myround(table1.age$p, digits = 3)
+table1.age$p[table1.age$p < .001] <- "< .001"
+table1.age$Predictor[table1.age$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.age[is.na(table1.age)] <- ""
+
+# Controlling for ethnicity (mean-centered RF and dummy-coded condition)
+rfcfl.promctr.ethnicity <- lm(allo ~ premc * condD + ethnicity + promc * condD, data=cfl)
+table1.ethnicity <- tidy(rfcfl.promctr.ethnicity)
+table1.ethnicity <- dplyr::rename(table1.ethnicity, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.ethnicity$Estimate <- myround(table1.ethnicity$Estimate, digits = 2)
+table1.ethnicity$p <- myround(table1.ethnicity$p, digits = 3)
+table1.ethnicity$p[table1.ethnicity$p < .001] <- "< .001"
+table1.ethnicity$Predictor[table1.ethnicity$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.ethnicity[is.na(table1.ethnicity)] <- ""
+
+# Controlling for income (mean-centered RF and dummy-coded condition)
+rfcfl.promctr.income <- lm(allo ~ premc * condD + income + promc * condD, data=cfl)
+table1.income <- tidy(rfcfl.promctr.income)
+table1.income <- dplyr::rename(table1.income, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.income$Estimate <- myround(table1.income$Estimate, digits = 2)
+table1.income$p <- myround(table1.income$p, digits = 3)
+table1.income$p[table1.income$p < .001] <- "< .001"
+table1.income$Predictor[table1.income$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.income[is.na(table1.income)] <- ""
+
+# Controlling for education (mean-centered RF and dummy-coded condition) - MS
+rfcfl.promctr.edu <- lm(allo ~ premc * condD + education + promc * condD, data=cfl)
+table1.edu <- tidy(rfcfl.promctr.edu)
+table1.edu <- dplyr::rename(table1.edu, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.edu$Estimate <- myround(table1.edu$Estimate, digits = 2)
+table1.edu$p <- myround(table1.edu$p, digits = 3)
+table1.edu$p[table1.edu$p < .001] <- "< .001"
+table1.edu$Predictor[table1.edu$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.edu[is.na(table1.edu)] <- ""
+```
+
+[^3]: This interaction also remained significant when controlling for a range of demographic variables including gender ($B = `r myround(as.numeric(table1.gender[7,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.gender[7,"p"]))`$), age ($B = `r myround(as.numeric(table1.age[6,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.age[6,"p"]))`$), ethnicity ($B = `r myround(as.numeric(table1.ethnicity[12,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.ethnicity[12,"p"]))`$), income ($B = `r myround(as.numeric(table1.income[11,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.income[11,"p"]))`$), and education ($B = `r myround(as.numeric(table1.edu[10,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.edu[10,"p"]))`$)), as well as when *not* including promotion pride as a covariate ($B = `r myround(as.numeric(table1.noprom[4,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.noprom[4,"p"]))`$).
+
+## 3.2.  Exploratory Moderated Mediation Analysis
+
+By treating our counterfactual thought and hypothetical emotion measures as alternative mediators of the interaction of interest, we explored potential mechanisms underlying the effect. To do so, we conducted path analyses using the R-package *lavaan* [Version 0.6.3; @R-lavaan]. First, all variables were standardized to facilitate effect size comparisons across models. Then, within each analysis, we specified two regression models and formulas for the conditional indirect, direct, and total effects of interest in accordance with recommended practice for moderated mediation [@preacheretal2007] and Model 8 within Hayes' PROCESS macro [-@hayes2018]. In the first model, we regressed the potential mediator on prevention pride, counterfactual loss, and the interaction between prevention pride and counterfactual loss, while also controlling for promotion pride and the interaction between promotion pride and counterfactual loss. In the second model, we regressed our dependent variable (Bitcoin allocation) on the same predictor variables plus the potential mediator of interest. Within these models, standard errors and confidence intervals were estimated using bootstrap methods.
+
+Across the potential mediators tested, one was significant: the degree to which participants reported they would hypothetically have been relieved if they had invested in Bitcoin earlier. Table 2 contains the results of this analysis.[^4]
+
+[^4]: The results of all other exploratory mediation analyses can be found within the Supplementary Materials.
+
+```{r med.relieved.promctr.lavaan, eval = FALSE, cache = TRUE}
+# Specify model
+Mod.Med.Lavaan.promctr.Relieved <- '
+# Regressions
+relieved.s ~ 1 + a1*premc.s + a2*condE + a3*premc.s:condE + a4*promc.s + a5*promc.s:condE
+allo.s ~ 1 + cdash1*premc.s + cdash2*condE + b1*relieved.s + cdash3*premc.s:condE + cdash4*promc.s + cdash5*promc.s:condE
+
+#Indirect effects conditional on moderator (a1 + a3*ModValue)*b1
+indirect.ctrl := (a1 + a3*(-1))*b1
+indirect.CFL := (a1 + a3*(1))*b1
+
+#Direct effects conditional on moderator (cdash1 + cdash3*ModValue)
+direct.ctrl := cdash1 + cdash3*(-1)
+direct.CFL := cdash1 + cdash3*(1)
+
+#Total effects conditional on moderator
+total.ctrl := direct.ctrl + indirect.ctrl
+total.CFL := direct.CFL + indirect.CFL
+
+#Proportion mediated conditional on moderator
+#To match the output of "mediate" package
+prop.mediated.ctrl := indirect.ctrl / total.ctrl
+prop.mediated.CFL := indirect.CFL / total.CFL
+
+#Index of moderated mediation
+#An alternative way of testing if conditional indirect effects are significantly different from each other
+index.mod.med := a3*b1
+'
+
+# Fit model
+set.seed(1234)
+Mod.Med.SEM.promctr.relieved <- sem(model = Mod.Med.Lavaan.promctr.Relieved,
+                                    data = cfl,
+                                    meanstructure = TRUE,
+                                    se = "bootstrap",
+                                    bootstrap = 5000)
+
+save(Mod.Med.SEM.promctr.relieved, file = "models/relievedFitFinal.RData")
+```
+
+```{r relievedcoefs}
+load("models/relievedFitFinal.RData")
+
+relievedPromctrCoefs <- parameterEstimates(Mod.Med.SEM.promctr.relieved)
+a3.relieved.promctr <- relievedPromctrCoefs$est[relievedPromctrCoefs$label == "a3"]
+a3.p.relieved.promctr <- relievedPromctrCoefs$pvalue[relievedPromctrCoefs$label == "a3"]
+b.relieved.promctr <- relievedPromctrCoefs$est[relievedPromctrCoefs$label == "b1"]
+b.p.relieved.promctr <- relievedPromctrCoefs$pvalue[relievedPromctrCoefs$label == "b1"]
+condIndEffctrl.relieved.promctr <- relievedPromctrCoefs$est[relievedPromctrCoefs$label == "indirect.ctrl"]
+condIndEffctrl.se.relieved.promctr <- relievedPromctrCoefs$se[relievedPromctrCoefs$label == "indirect.ctrl"]
+condIndEffctrl.cilower.relieved.promctr <- relievedPromctrCoefs$ci.lower[relievedPromctrCoefs$label == "indirect.ctrl"]
+condIndEffctrl.ciupper.relieved.promctr <- relievedPromctrCoefs$ci.upper[relievedPromctrCoefs$label == "indirect.ctrl"]
+condIndEffCFL.relieved.promctr <- relievedPromctrCoefs$est[relievedPromctrCoefs$label == "indirect.CFL"]
+condIndEffCFL.se.relieved.promctr <- relievedPromctrCoefs$se[relievedPromctrCoefs$label == "indirect.CFL"]
+condIndEffCFL.cilower.relieved.promctr <- relievedPromctrCoefs$ci.lower[relievedPromctrCoefs$label == "indirect.CFL"]
+condIndEffCFL.ciupper.relieved.promctr <- relievedPromctrCoefs$ci.upper[relievedPromctrCoefs$label == "indirect.CFL"]
+```
+
+```{r medmodel}
+table2 <- relievedPromctrCoefs 
+table2 <- dplyr::rename(table2, Predictor = rhs, Estimate = est, SE = se, p = pvalue, CI.lower = ci.lower, CI.upper = ci.upper)
+table2$label <- NULL
+table2 <- table2[table2$op != "~~",]
+table2$Predictor[table2$lhs == "relieved.s" & table2$op == "~1"] <- "Intercept"
+table2$op[table2$lhs == "relieved.s" & table2$op == "~1"] <- "~"
+table2$Predictor[table2$lhs == "allo.s" & table2$op == "~1"] <- "Intercept"
+table2$op[table2$lhs == "allo.s" & table2$op == "~1"] <- "~"
+table2 <- table2[table2$op != "~1",]
+table2 <- table2[1:15,]
+table2 <- table2 %>%
+  mutate(section = recode(lhs, relieved.s = 1, allo.s = 2,
+                          indirect.ctrl = 3, indirect.CFL = 4)) %>%
+  arrange(section,desc(op))
+table2$Predictor[table2$lhs == "indirect.ctrl"] <- "Control Condition"
+table2$Predictor[table2$lhs == "indirect.CFL"] <- "Counterfactual Loss Condition"
+table2$Estimate <- myround(table2$Estimate, digits = 2)
+table2$SE <- myround(table2$SE, digits = 2)
+table2$z <- myround(table2$z, digits = 2)
+table2$p <- myround(table2$p, digits = 3)
+table2$CI.lower <- myround(table2$CI.lower, digits = 4)
+table2$CI.upper <- myround(table2$CI.upper, digits = 4)
+table2$p[table2$p < .001] <- "< .001"
+table2$Predictor[table2$Predictor == "premc.s"] <- "Prevention Pride"
+table2$Predictor[table2$Predictor == "condE"] <- "Counterfactual Loss"
+table2$Predictor[table2$Predictor == "promc.s"] <- "Promotion Pride"
+table2$Predictor[table2$Predictor == "premc.s:condE"] <- "Prev. Pride x CF Loss"
+table2$Predictor[table2$Predictor == "promc.s:condE"] <- "Prom. Pride x CF Loss"
+table2$Predictor[table2$Predictor == "relieved.s"] <- "Hypothetical Relief"
+table2[is.na(table2)] <- ""
+table2$lhs <- NULL
+table2$op <- NULL
+table2$section <- NULL
+table2$order <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 10, 11, 12, 14, 15)
+table2 <- arrange(table2, order)
+table2$order <- NULL
+
+medmodel <- table2 %>%
+  mutate(
+    Estimate = cell_spec(Estimate, "latex", align = "r"),
+    SE = cell_spec(SE, "latex", align = "r"),
+    z = cell_spec(z, "latex", align = "r"),
+    p = cell_spec(p, "latex", align = "r"),
+    CI.lower = cell_spec(CI.lower, "latex", align = "r"),
+    CI.upper = cell_spec(CI.upper, "latex", align = "r")
+  ) %>%
+  kable("latex", booktabs = TRUE, escape = FALSE, caption = "Summary of Mediation Analysis") %>%
+  kable_styling(latex_options = c("scale_down")) %>%
+  group_rows("Model 1 (DV = Hypothetical Relief)", 1, 6) %>%
+  group_rows("Model 2 (DV = Bitcoin Allocation)", 7, 13) %>%
+  group_rows("Bootstrapped Conditional Indirect Effects\n(Prev. Pride x CF Loss → Hypothetical Relief → Bitcoin Allocation)", 14, 15) %>%
+  row_spec(0, align = "c") %>%
+  footnote(general = "This analysis included an effect-coded variable for the counterfactual loss condition: -1 = control, 1 = counterfactual loss. All other variables were standardized (M = 0, SD = 1). Estimated effect sizes for the models reported here are standardized regression coefficients.", general_title = "Note: ", footnote_as_chunk = T, title_format = c("italic"), threeparttable = TRUE, escape = FALSE)
+```
+
+```{r medmodelprint, include = TRUE, results = 'asis'}
+medmodel
+```
+
+The interaction between prevention pride and counterfactual loss was associated with hypothetical relief ($\beta = `r myround(a3.relieved.promctr, digits = 2)`$, $`r pval(a3.p.relieved.promctr)`$), and the effect of hypothetical relief was associated with Bitcoin allocation ($\beta = `r myround(b.relieved.promctr, digits = 2)`$, $`r pval(b.p.relieved.promctr)`$). Importantly, the indirect effect of prevention pride on Bitcoin allocation through hypothetical relief was significant and negative for individuals in the counterfactual loss condition ($\beta = `r myround(condIndEffCFL.relieved.promctr, digits = 2)`$, $SE = `r myround(condIndEffCFL.se.relieved.promctr, digits = 2)`$, 95% CI [$`r myround(condIndEffCFL.cilower.relieved.promctr, digits = 4)`, `r myround(condIndEffCFL.ciupper.relieved.promctr, digits = 4)`$]), but not the control condition (n.s.). This finding indicates that the moderation is fully mediated.
+
+# 4.  Discussion
+
+Regulatory focus has been well-established as an individual difference that predicts unique patterns of decision-making. The purpose of the present study was to examine whether the effect of a prevention focus on risky choices following actual loss [@scholeretal2010] translates to cases of socially-defined counterfactual loss.
+
+The results of our primary analysis indicated that a prevention focus does indeed predict the degree to which participants engage in risk-taking following a socially-defined counterfactual loss. These findings suggest that counterfactual loss is uniquely relevant to the prevention (vs. promotion) system. Our exploratory mediation analysis provides further support for this relationship, as the hypothetical emotional experience that mediates the interaction effect (i.e., hypothetical relief) falls on the quiescence-agitation spectrum that relates to prevention.
+
+However, the direction of this effect contradicted our primary hypothesis: Although we hypothesized that a prevention focus would predict increased risk-taking in cases of counterfactual loss, we found that prevention pride predicted *decreased* risky investment behavior in such a case. Interestingly, these findings *do* align with the alternate account introduced in section 1.1.
+
+## 4.1.  Limitations and Future Research
+
+Despite its contributions, this study had several limitations. First, the study was intended to place participants in a situation in which the only way to recover a counterfactually-lost amount would be to make a risky investment. However, our findings suggest that participants may not have believed that investing in Bitcoin offered them this opportunity for full recovery. To guarantee that the risky option offers this possibility, a replication study might allow participants to participate in a game of chance that explicitly provides the opportunity to earn this amount. For example, upon learning that they would join the beta-test on Day 4, participants could be offered the opportunity to pay a small amount to spin a wheel with a chance of winning the “lost” \$0.61.
+
+A second limitation is that our predictions were rooted in the assumption that the experience of counterfactual loss is created by the introduction of a social reference point above one’s current status quo, which then redefines what constitutes a satisfactory state. However, the study did not examine this change in reference points explicitly, and follow-up studies should do so. For instance, at the start of the study, participants could be asked to consider their financial goal pursuits and then visualize their current status quo and what they would consider a satisfactory state as points on a line. Later, following the counterfactual loss manipulation, participants might repeat this procedure. We predict that the point representing the current state would not shift, while the point representing the satisfactory state would increase in distance with respect to the current state—particularly for prevention-focused participants.
+
+Finally, future studies should also examine the impact of regulatory focus in other counterfactual situations. In particular, given Zou and colleagues’ [-@zouetal2014] finding that a promotion focus predicts risky decision-making in cases of actual gains, the results of the present study suggest that a consistent effect may be present in cases of counterfactual gains.
+
+## 4.2 Implications and Conclusions
+
+The present research offers several important implications. First, it contributes to the regulatory focus literature by extending Scholer and colleagues’ [-@scholeretal2010] findings to the domain of counterfactual loss. Additionally, the research raises the intriguing question of whether the reference point one considers a satisfactory status-quo may dynamically shift as a function of the social context.
+
+Finally, this research has important ramifications for individuals making financial decisions. For instance, consider the real estate market; if friends purchase a home that appreciates during a housing “bubble,” individual differences like regulatory focus may affect a person’s propensity to riskily invest in an overvalued home. Given these real-world implications, follow-up studies should investigate how people with a prevention focus can manage these tendencies that may ultimately detract from their well-being.
+
+\newpage
+
+# References
+```{r create_r-references}
+r_refs(file = "manuscript/rfcfloss.bib")
+```
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id = "refs"></div>
+\endgroup
