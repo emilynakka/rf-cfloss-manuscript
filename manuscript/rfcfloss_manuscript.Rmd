@@ -3,26 +3,18 @@ title             : "Does Your Gain Define My Loss?: Socially-Defined Counterfac
 shorttitle        : "Social Counterfactual Loss and Prevention Focus"
 
 author: 
-  - name          : "Emily Nakkawita"
+  - name          : "[Anonymous Author(s)]"
     affiliation   : "a"
     corresponding : yes    # Define only one corresponding author
-    address       : "Columbia University, Psychology Department, 406 Schermerhorn Hall, 1190 Amsterdam Ave. MC 5501, New York, NY 10027, USA"
-    email         : "ebn2111@columbia.edu"
-  - name          : "Frank Mathmann"
-    affiliation   : "b"
-  - name          : "E. Tory Higgins"
-    affiliation   : "a"
+    address       : "[Anonymized Corresponding Author Address]"
+    email         : "[Anonymized Author Email]"
 
 affiliation:
   - id            : "a"
-    institution   : "Columbia University"
-  - id            : "b"
-    institution   : "Queensland University of Technology"
+    institution   : "[Anonymized Institution(s)]"
 
 authornote: |
-  a Columbia University, Psychology Department, 406 Schermerhorn Hall, 1190 Amsterdam Ave. MC 5501, New York, NY 10027, USA
-  
-  b Queensland University of Technology, QUT Business School, School of Advertising, Marketing, and Public Relations, GPO Box 2434, Brisbane, Queensland 4001, Australia
+  a [Anonymized Corresponding Author Address(es)]
   
   Declarations of interest: none
   
