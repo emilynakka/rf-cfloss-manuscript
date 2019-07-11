@@ -292,12 +292,6 @@ save(cflorig, file = "data/rfcfloss_coded.RData")
 
 # Participants
 
-## Enrollment
-
-A prior exploratory study with a more complex repeated-measures design revealed a small effect size for the moderating role of a prevention focus on risk-taking within a hypothetical investment allocation task, with an $f^2$ of 0.021. A power analysis based on this effect size suggested a required sample size of 462 to detect the interaction of interest with sufficient power; to account for expected attrition between Parts I and II of the present study, we enrolled 500 participants.
-
-Data collection took place in September 2018, and our full sample was recruited through an advertisement on Amazon's Mechanical Turk ("M-Turk") platform soliciting participation from workers at least 18 years of age who were based in the United States. 
-
 ## Exclusions
 
 ### Excluding participants who did not complete our IV and/or DV
@@ -1318,7 +1312,11 @@ medmodel.relieved
 
 When we control for promotion pride and the interaction between promotion and counterfactual loss, the interaction between prevention and counterfactual loss was significantly associated with the degree to which participants reported they imagine they would be relieved if they had invested in Bitcoin earlier ($\beta = `r myround(a3.relieved.promctr, digits = 2)`$, $`r pval(as.numeric(a3.p.relieved.promctr))`$), and the effect of participants reporting they imagined being relieved if they had invested earlier ($\beta = `r myround(b.relieved.promctr, digits = 2)`$, $`r pval(as.numeric(b.p.relieved.promctr))`$) on Bitcoin allocation was also significant. (See Table 12 and the article for full model output.)
 
-# Rerunning with Participants Who Learned About Study from Other M-Turkers
+# Rerunning with Participants Who Learned About Study from Other M-Turk workers.
+
+## Primary Linear Analysis
+
+The direction and significance of our primary linear analysis does not change when rerunning the analysis to include participants who learned about the study from other M-Turk workers (see Table 13 and Figure 2).
 
 ```{r subset4.rerun, include=FALSE}
 # Creating subset to facilitate visualization of results within each condition
@@ -1331,28 +1329,6 @@ cfl.rerun.ctrlcond <- subset(cfl.rerun, condition == "Control") # n = 157
 save(cfl.rerun, cfl.rerun.cflcond, cfl.rerun.ctrlcond, file = "data/rfcfloss_rerun_clean.RData")
 write.csv(cfl.rerun, file = "data/rfcfloss_rerun_clean.csv")
 ```
-
-```{r desc.rerun, echo = FALSE, warning = FALSE, message = FALSE}
-# summarySE() function defined at top of document
-cfl.rerun.summary <- summarySE(cfl.rerun, measurevar="allo", groupvars=c("hiloprev","condition"))
-
-rerunplot <- ggplot(data=cfl.rerun, aes(x = hiloprev, y = allo, color = hiloprev)) +
-  facet_wrap(. ~ condition) +
-  geom_jitter() +
-  geom_errorbar(data = cflsummary, aes(ymin = allo - se, ymax = allo + se),
-                     , col = "black", size = .5) +
-  geom_point(data = cflsummary, col = "black", size = 3, alpha = 1) +
-  scale_x_discrete(labels = c("High", "Low")) +
-  labs(title="RERUN: Bitcoin Allocation By Counterfactual Loss and\nPrevention Pride (NOTE: Does Not Control\nfor Effects of Promotion Pride)", x="Prevention Pride (Median-Split)", y="Bitcoin Allocation (%)") +
-  theme(legend.position = "none")
-```
-
-```{r, echo=FALSE, results='asis'}
-cat("\\newpage")
-rerunplot
-```
-
-## Primary Linear Analysis
 
 ```{r primarymodel.rerun, include = FALSE}
 # PRIMARY MODEL, CONTROLLING FOR PROMOTION (mean-centered RF and dummy-coded condition)
@@ -1403,7 +1379,7 @@ rfcfl.promctr.pred.CFL.rerun <- cbind(pred.data.CFL.rerun,
                                         type = c("response", "terms")))
 rfcfl.promctr.pred.CFL.rerun <- dplyr::rename(rfcfl.promctr.pred.CFL.rerun, allo = fit)
 
-ggplot(data=cfl.rerun, aes(x=premc, y=allo)) +
+primarymodel.rerun <- ggplot(data=cfl.rerun, aes(x=premc, y=allo)) +
        scale_color_manual(values=c("gray0", "gray50")) +
        geom_ribbon(data = rfcfl.promctr.pred.ctrl, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
        geom_ribbon(data = rfcfl.promctr.pred.CFL, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
@@ -1412,7 +1388,11 @@ ggplot(data=cfl.rerun, aes(x=premc, y=allo)) +
        labs(title="RERUN: Prevention Pride and Counterfactual Loss as\nPredictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride (Mean-Centered)", y="Bitcoin Allocation (%)", color = "Condition")
 ```
 
-#### Simple Slopes and Johnson-Neyman Analyses
+```{r primarymodelplot_print.rerun, echo = FALSE, include = TRUE, fig.cap = "RERUN: Predicted Bitcoin allocation by prevention pride and counterfactual loss experience, controlling for promotion pride and the interaction between promotion pride and counterfactual loss.", fig.align = "center", out.width = '90%', out.height = '90%'}
+primarymodel.rerun
+```
+
+## Simple Slopes and Johnson-Neyman Analyses
 
 ```{r jn1_simpleslopes.rerun, echo = FALSE}
 jn1.rerun <- sim_slopes(model = rfcfl.promctr.rerun, pred = premc, modx = condD, modx.values = c(0,1),
@@ -1435,9 +1415,9 @@ jncutoff_high.rerun <- jn2.rerun$jn[[1]]$bounds[2]
 jn2.rerun <- tidy(jn2.rerun)
 ```
 
-When rerunning our simple slopes and Johnson-Neyman analyses, the significance and direction of our results do not change. The effect of prevention pride on Bitcoin allocation was still significant in the counterfactual loss condition ($B = `r myround(jn1.rerun[1,"estimate"], digits = 2)`, SE = `r myround(jn1.rerun[1,"std.error"], digits = 2)`, t = `r myround(jn1.rerun[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn1.rerun[1,"p.value"]))`$; 95% CI [`r myround(jn1.rerun[1,"conf.low"], digits = 4)`, `r myround(jn1.rerun[1,"conf.high"], digits = 4)`]) but non-significant in the control condition.
+When rerunning our simple slopes and Johnson-Neyman analyses, the direction and significance of our results do not change. The effect of prevention pride on Bitcoin allocation was still significant in the counterfactual loss condition ($B = `r myround(jn1.rerun[1,"estimate"], digits = 2)`, SE = `r myround(jn1.rerun[1,"std.error"], digits = 2)`, t = `r myround(jn1.rerun[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn1.rerun[1,"p.value"]))`$; 95% CI [`r myround(jn1.rerun[1,"conf.low"], digits = 4)`, `r myround(jn1.rerun[1,"conf.high"], digits = 4)`]) but non-significant in the control condition.
 
-Further, the conditional effect of counterfactual loss on Bitcoin allocation was still positive for people with prevention pride of less than 2.51 ($B = `r myround(jn2.rerun[2,"estimate"], digits = 2)`, SE = `r myround(jn2.rerun[2,"std.error"], digits = 2)`, t = `r myround(jn2.rerun[2,"statistic"], digits = 2)`, `r pval(as.numeric(jn2.rerun[2,"p.value"]))`$), and negative for people with prevention pride of greater than 4.57 ($B = `r myround(jn2.rerun[1,"estimate"], digits = 2)`, SE = `r myround(jn2.rerun[1,"std.error"], digits = 2)`, t = `r myround(jn2.rerun[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn2.rerun[1,"p.value"]))`$).
+Further, the conditional effect of counterfactual loss on Bitcoin allocation was still positive for people with prevention pride of less than 2.51 ($B = `r myround(jn2.rerun[3,"estimate"], digits = 2)`, SE = `r myround(jn2.rerun[3,"std.error"], digits = 2)`, t = `r myround(jn2.rerun[3,"statistic"], digits = 2)`, `r pval(as.numeric(jn2.rerun[3,"p.value"]))`$), and negative for people with prevention pride of greater than 4.57 ($B = `r myround(jn2.rerun[1,"estimate"], digits = 2)`, SE = `r myround(jn2.rerun[1,"std.error"], digits = 2)`, t = `r myround(jn2.rerun[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn2.rerun[1,"p.value"]))`$).
 
 ## Exploratory Mediation Analysis (Hayes PROCESS Model 8): Counterfactual Relief
 
