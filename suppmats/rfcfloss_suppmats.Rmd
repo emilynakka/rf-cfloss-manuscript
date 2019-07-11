@@ -1312,7 +1312,7 @@ medmodel.relieved
 
 When we control for promotion pride and the interaction between promotion and counterfactual loss, the interaction between prevention and counterfactual loss was significantly associated with the degree to which participants reported they imagine they would be relieved if they had invested in Bitcoin earlier ($\beta = `r myround(a3.relieved.promctr, digits = 2)`$, $`r pval(as.numeric(a3.p.relieved.promctr))`$), and the effect of participants reporting they imagined being relieved if they had invested earlier ($\beta = `r myround(b.relieved.promctr, digits = 2)`$, $`r pval(as.numeric(b.p.relieved.promctr))`$) on Bitcoin allocation was also significant. (See Table 12 and the article for full model output.)
 
-# Rerunning with Participants Who Learned About Study from Other M-Turk workers.
+# Rerunning with Participants Who Learned About Study from Other M-Turk Workers
 
 ## Primary Linear Analysis
 
