@@ -19,7 +19,8 @@ library(broom) # Required to extract effects from models
 library(kableExtra) # Required for table styling
 library(ggplot2) # Required for plots
 library(shiny) # Required to properly cite shiny when referencing our data visualization app
-library(jtools) # Required for Johnson-Neyman and simple slopes analyses
+library(jtools) # IN ORIGINAL SUBMISSION: Required for Johnson-Neyman and simple slopes analyses
+library(interactions) # IN REVISION (DUE TO PACKAGE UPDATE): Required for Johnson-Neyman and simple slopes analyses
 library(cowplot) # Required for sim_slopes
 library(boot) # Required for bootstrapping CIs in mediation analysis
 library(lavaan) # Required for mediation analyses
