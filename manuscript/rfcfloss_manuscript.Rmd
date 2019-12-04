@@ -43,7 +43,7 @@ header-includes   :
 
 documentclass     : "apa6"
 classoption       : "man"
-output            : papaja::apa6_word
+output            : papaja::apa6_pdf
 ---
 
 ```{r setup, warning = FALSE, message = FALSE}
@@ -72,6 +72,23 @@ set.seed(1234)
 # Set knitr options
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, include = FALSE, message = FALSE)
 knitr::opts_knit$set(root.dir = normalizePath('../'))
+
+# Set ggplot theme
+mytheme = theme_minimal(base_size = 16) + 
+    theme(legend.position = 'none',
+          panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
+          plot.background = element_rect(fill = "white", color = NA),
+          panel.background = element_rect(fill = "white", color = NA),
+          strip.text.x = element_blank(),
+          panel.margin = unit(0.1, "cm"),
+          panel.border = element_rect(color="black", fill=NA),
+          text = element_text(family="Helvetica", size=12),
+          axis.text.x = element_text(size=8, margin=unit(c(2,0,0,0), "mm")),
+          axis.text.y = element_text(size=8, margin=unit(c(0,2,0,0), "mm")),
+          axis.ticks = element_line(size = .3),
+          axis.ticks.length=unit(-1, "mm"))
+theme_set(mytheme)
 
 # Functions
 pval <- function(x) {
@@ -208,12 +225,17 @@ Data collection took place in September 2018. Using Amazon Mechanical Turk (“M
 ```{r rf}
 prommean <- myround(mean(cfl$prom), digits = 2)
 promsd <- myround(sd(cfl$prom), digits = 2)
+prom <- select(cfl, rfq_1r, rfq_3, rfq_7, rfq_9r, rfq_10, rfq_11r)
+promalpha <- psych::alpha(prom)$total["raw_alpha"]
+
 prevmean <- myround(mean(cfl$prev), digits = 2)
 prevsd <- myround(sd(cfl$prev), digits = 2)
+prev <- select(cfl, rfq_2r, rfq_4r, rfq_5, rfq_6r, rfq_8r)
+prevalpha <- psych::alpha(prev)$total["raw_alpha"]
 ```
 
 ### 2.2.1.  Regulatory focus pride.
-To measure chronic historical effectiveness (i.e., “pride”) in the domains of prevention and promotion, we administered the Regulatory Focus Questionnaire ["RFQ"; @higginsetal2001]. The RFQ consists of five prevention-related items (e.g., “Not being careful enough has gotten me into trouble at times”) and six promotion-related items (e.g., “I feel like I have made progress toward being successful in my life”) to which participants respond on five-point scales ranging from 1 (*never or seldom* or *certainly false*) to 5 (*very often* or *certainly true*). Mean endorsement levels were calculated for each participant  ($M_{prevention pride} = `r prevmean`$; $SD_{prevention pride} = `r prevsd`$; $M_{promotion pride} = `r prommean`$; $SD_{promotion pride} = `r promsd`$). We then centered these variables by subtracting these means from each score.
+To measure chronic historical effectiveness (i.e., “pride”) in the domains of prevention and promotion, we administered the Regulatory Focus Questionnaire ["RFQ"; @higginsetal2001]. The RFQ consists of five prevention-related items (e.g., “Not being careful enough has gotten me into trouble at times”) and six promotion-related items (e.g., “I feel like I have made progress toward being successful in my life”) to which participants respond on five-point scales ranging from 1 (*never or seldom* or *certainly false*) to 5 (*very often* or *certainly true*). Mean endorsement levels were calculated for each participant  ($M_{prevention} = `r prevmean`$; $SD_{prevention} = `r prevsd`$; $\alpha_{prevention} = `r myround(prevalpha, digits = 2)`$; $M_{promotion} = `r prommean`$; $SD_{promotion} = `r promsd`$; $\alpha_{promotion} = `r myround(promalpha, digits = 2)`$). We then centered these variables by subtracting these means from each score.
 
 ### 2.2.2.  Counterfactual loss manipulation.
 Participants were randomly assigned to one of two experimental conditions: counterfactual loss versus control. After an introduction to an investing app that they would beta-test, participants in the counterfactual loss condition were notified that they were joining a test-in-progress on Day 4, while participants in the control condition were simply welcomed to Day 1 of the beta-test:
@@ -365,9 +387,9 @@ jncutoff_high <- jn2$jn[[1]]$bounds[2]
 jn2 <- tidy(jn2)
 ```
 
-The results revealed no main effects, and the interaction between *promotion* pride and counterfactual loss was not significant. However, the analysis yielded a significant two-way interaction between *prevention* pride and counterfactual loss (and this interaction effect remained significant when analyzed including participants who learned about the study from other participants: $B = `r myround(as.numeric(table1.rerun[5,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.rerun[5,"p"]))`$).[^3] To probe the conditional effect of prevention pride at each level of the counterfactual loss variable, we conducted a simple slopes analysis using the R-package *jtools* [Version 1.1.1; @R-jtools]. The effect of prevention pride on Bitcoin allocation was significant in the counterfactual loss condition ($B = `r myround(jn1[1,"estimate"], digits = 2)`, SE = `r myround(jn1[1,"std.error"], digits = 2)`, t = `r myround(jn1[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn1[1,"p.value"]))`$; 95% CI [`r myround(jn1[1,"conf.low"], digits = 4)`, `r myround(jn1[1,"conf.high"], digits = 4)`]) but non-significant in the control condition. These results indicate that, when facing counterfactual loss, as prevention pride increased, participants allocated less to a risky Bitcoin investment.
+The results revealed no main effects, and the interaction between *promotion* pride and counterfactual loss was not significant. However, the analysis yielded a significant two-way interaction between *prevention* pride and counterfactual loss (and this interaction effect remained significant when analyzed including participants who learned about the study from other participants: $B = `r myround(as.numeric(table1.rerun[5,"Estimate"]), digits = 2)`, `r pval(as.numeric(table1.rerun[5,"p"]))`$).[^3] To probe the conditional effect of prevention pride at each level of the counterfactual loss variable, we conducted a simple slopes analysis using the R-package *interactions* [Version 1.1.1; @R-interactions]. The effect of prevention pride on Bitcoin allocation was significant in the counterfactual loss condition ($B = `r myround(jn1[2,"estimate"], digits = 2)`, SE = `r myround(jn1[2,"std.error"], digits = 2)`, t = `r myround(jn1[2,"statistic"], digits = 2)`, `r pval(as.numeric(jn1[2,"p.value"]))`$; 95% CI [`r myround(jn1[2,"conf.low"], digits = 4)`, `r myround(jn1[2,"conf.high"], digits = 4)`]) but non-significant in the control condition. These results indicate that, when facing counterfactual loss, as prevention pride increased, participants allocated less to a risky Bitcoin investment.
 
-Additionally, to explore the interaction at different levels of prevention pride ($M = 3.44; SD = 0.89$), we applied the Johnson–Neyman (J–N) technique using using the R-package *jtools* [Version 1.1.1; @R-jtools]. This analysis revealed that the conditional effect of counterfactual loss on Bitcoin allocation was *positive* for people with prevention pride of less than `r myround(jncutoff_low, digits = 2)` ($B = `r myround(jn2[2,"estimate"], digits = 2)`, SE = `r myround(jn2[2,"std.error"], digits = 2)`, t = `r myround(jn2[2,"statistic"], digits = 2)`, `r pval(as.numeric(jn2[2,"p.value"]))`$), and *negative* for people with prevention pride of greater than `r myround(jncutoff_high, digits = 2)` ($B = `r myround(jn2[1,"estimate"], digits = 2)`, SE = `r myround(jn2[1,"std.error"], digits = 2)`, t = `r myround(jn2[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn2[1,"p.value"]))`$). These results suggest that individuals high versus low in prevention pride responded to counterfactual loss in different ways, while people with middling levels of prevention pride did not respond to counterfactual loss.
+Additionally, to explore the interaction at different levels of prevention pride ($M = 3.44; SD = 0.89$), we applied the Johnson–Neyman (J–N) technique using using the R-package *interactions* [Version 1.1.1; @R-interactions]. This analysis revealed that the conditional effect of counterfactual loss on Bitcoin allocation was *positive* for people with prevention pride of less than `r myround(jncutoff_low, digits = 2)` ($B = `r myround(jn2[1,"estimate"], digits = 2)`, SE = `r myround(jn2[1,"std.error"], digits = 2)`, t = `r myround(jn2[1,"statistic"], digits = 2)`, `r pval(as.numeric(jn2[1,"p.value"]))`$), and *negative* for people with prevention pride of greater than `r myround(jncutoff_high, digits = 2)` ($B = `r myround(jn2[3,"estimate"], digits = 2)`, SE = `r myround(jn2[3,"std.error"], digits = 2)`, t = `r myround(jn2[3,"statistic"], digits = 2)`, `r pval(as.numeric(jn2[3,"p.value"]))`$). These results suggest that individuals high versus low in prevention pride responded to counterfactual loss in different ways, while people with middling levels of prevention pride did not respond to counterfactual loss.
 
 ```{r primarymodel.nopromctr}
 # Not controlling for promotion pride (mean-centered RF and dummy-coded condition)
@@ -501,7 +523,7 @@ condIndEffCFL.cilower.relieved.promctr <- relievedPromctrCoefs$ci.lower[relieved
 condIndEffCFL.ciupper.relieved.promctr <- relievedPromctrCoefs$ci.upper[relievedPromctrCoefs$label == "indirect.CFL"]
 ```
 
-```{r medmodel}
+```{r medmodel, include = TRUE, results = 'asis'}
 table2 <- relievedPromctrCoefs 
 table2 <- dplyr::rename(table2, Predictor = rhs, Estimate = est, SE = se, p = pvalue, CI.lower = ci.lower, CI.upper = ci.upper)
 table2$label <- NULL
@@ -548,7 +570,7 @@ medmodel <- table2 %>%
     CI.lower = cell_spec(CI.lower, "latex", align = "r"),
     CI.upper = cell_spec(CI.upper, "latex", align = "r")
   ) %>%
-  kable("latex", booktabs = TRUE, escape = FALSE, caption = "Summary of Mediation Analysis") %>%
+  kable(format = "latex", booktabs = TRUE, escape = FALSE, caption = "Summary of Mediation Analysis") %>%
   kable_styling(latex_options = c("scale_down")) %>%
   group_rows("Model 1 (DV = Hypothetical Relief)", 1, 6) %>%
   group_rows("Model 2 (DV = Bitcoin Allocation)", 7, 13) %>%
