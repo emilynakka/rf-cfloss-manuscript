@@ -53,20 +53,12 @@ library(lavaan) # Required for mediation analyses
 library(semPlot) # Required to plot mediation models
 
 # Set ggplot theme
-mytheme = theme_minimal(base_size = 16) + 
-    theme(legend.position = 'none',
-          panel.grid.minor = element_blank(),
+mytheme = theme_classic(base_size = 14) +
+    theme(panel.grid.minor = element_blank(),
           panel.grid.major = element_blank(),
           plot.background = element_rect(fill = "white", color = NA),
           panel.background = element_rect(fill = "white", color = NA),
-          strip.text.x = element_blank(),
-          panel.margin = unit(0.1, "cm"),
-          panel.border = element_rect(color="black", fill=NA),
-          text = element_text(family="Helvetica", size=12),
-          axis.text.x = element_text(size=8, margin=unit(c(2,0,0,0), "mm")),
-          axis.text.y = element_text(size=8, margin=unit(c(0,2,0,0), "mm")),
-          axis.ticks = element_line(size = .3),
-          axis.ticks.length=unit(-1, "mm"))
+          plot.title = element_text(hjust = 0.5))
 theme_set(mytheme)
 
 summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
@@ -576,7 +568,7 @@ ggplot(data=cfl, aes(x = hiloprev, y = allo, color = hiloprev)) +
                      , col = "black", size = .5) +
   geom_point(data = cflsummary, col = "black", size = 3, alpha = 1) +
   scale_x_discrete(labels = c("High", "Low")) +
-  labs(title="Bitcoin Allocation By Counterfactual Loss and Prevention Pride\n(NOTE: Does Not Control for Effects of Promotion Pride)", x="Prevention Pride (Median-Split)", y="Bitcoin Allocation (%)") +
+  labs(title="Bitcoin Allocation By CF Loss and Prev. Pride\n(NOTE: Does Not Control for Effects of Promotion Pride)", x="Prevention Pride (Median-Split)", y="Bitcoin Allocation (%)") +
   theme(legend.position = "none")
 
 ```
@@ -1407,10 +1399,10 @@ rfcfl.promctr.pred.CFL.rerun <- dplyr::rename(rfcfl.promctr.pred.CFL.rerun, allo
 
 primarymodel.rerun <- ggplot(data=cfl.rerun, aes(x=premc, y=allo)) +
        scale_color_manual(values=c("gray0", "gray50")) +
-       geom_ribbon(data = rfcfl.promctr.pred.ctrl, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
-       geom_ribbon(data = rfcfl.promctr.pred.CFL, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
-       geom_line(data = rfcfl.promctr.pred.ctrl, aes(color=condition), size = 1) +
-       geom_line(data = rfcfl.promctr.pred.CFL, aes(color=condition), size = 1) +
+       geom_ribbon(data = rfcfl.promctr.pred.ctrl.rerun, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+       geom_ribbon(data = rfcfl.promctr.pred.CFL.rerun, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+       geom_line(data = rfcfl.promctr.pred.ctrl.rerun, aes(color=condition), size = 1) +
+       geom_line(data = rfcfl.promctr.pred.CFL.rerun, aes(color=condition), size = 1) +
        labs(title="RERUN: Prevention Pride and Counterfactual Loss as\nPredictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride (Mean-Centered)", y="Bitcoin Allocation (%)", color = "Condition")
 ```
 
@@ -1601,11 +1593,11 @@ rfcfl.promctr.pred.CFL.all <- dplyr::rename(rfcfl.promctr.pred.CFL.all, allo = f
 
 primarymodel.all <- ggplot(data=cfl.all, aes(x=premc, y=allo)) +
        scale_color_manual(values=c("gray0", "gray50")) +
-       geom_ribbon(data = rfcfl.promctr.pred.ctrl, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
-       geom_ribbon(data = rfcfl.promctr.pred.CFL, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
-       geom_line(data = rfcfl.promctr.pred.ctrl, aes(color=condition), size = 1) +
-       geom_line(data = rfcfl.promctr.pred.CFL, aes(color=condition), size = 1) +
-       labs(title="RERUN (ALL): Prevention Pride and Counterfactual Loss\nas Predictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride (Mean-Centered)", y="Bitcoin Allocation (%)", color = "Condition")
+       geom_ribbon(data = rfcfl.promctr.pred.ctrl.all, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+       geom_ribbon(data = rfcfl.promctr.pred.CFL.all, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+       geom_line(data = rfcfl.promctr.pred.ctrl.all, aes(color=condition), size = 1) +
+       geom_line(data = rfcfl.promctr.pred.CFL.all, aes(color=condition), size = 1) +
+       labs(title="RERUN (ALL): Prevention Pride and Counterfactual\nLoss as Predictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride (Mean-Centered)", y="Bitcoin Allocation (%)", color = "Condition")
 ```
 
 ```{r primarymodelplot_print.all, echo = FALSE, include = TRUE, fig.cap = "RERUN (ALL): Predicted Bitcoin allocation by prevention pride and counterfactual loss experience, controlling for promotion pride and the interaction between promotion pride and counterfactual loss.", fig.align = "center", out.width = '90%', out.height = '90%'}
