@@ -1351,7 +1351,7 @@ write.csv(cfl.rerun, file = "data/rfcfloss_rerun_clean.csv")
 ```{r primarymodel.rerun, include = FALSE}
 # PRIMARY MODEL, CONTROLLING FOR PROMOTION (mean-centered RF and dummy-coded condition)
 rfcfl.promctr.rerun <- lm(allo ~ premc * condD + promc * condD, data=cfl.rerun)
-summary(rfcfl.promctr.rerun) # premc:condD b = -11.973, p = .0292
+summary(rfcfl.promctr.rerun)
 ```
 
 ```{r primarymodelreruntable, include = FALSE}
@@ -1531,7 +1531,7 @@ The indirect effect of prevention on Bitcoin allocation through reporting relief
 The direction and significance of our primary linear analysis does not change when rerunning the analysis to include every single participant who completed our independent and dependent measures, even those whose data had questionable validity due to IP spoofing issues as described above (see Table 15 and Figure 3).
 
 ```{r subset4.all, include=FALSE}
-# Creating subset to facilitate visualization of results within each condition
+# Creating subset to count participants each condition
 cfl.all.cflcond <- subset(cfl.all, condition == "CF Loss") # n = 239
 cfl.all.ctrlcond <- subset(cfl.all, condition == "Control") # n = 242
 ```
@@ -1545,7 +1545,7 @@ write.csv(cfl.all, file = "data/rfcfloss_all_clean.csv")
 ```{r primarymodel.all, include = FALSE}
 # PRIMARY MODEL, CONTROLLING FOR PROMOTION (mean-centered RF and dummy-coded condition)
 rfcfl.promctr.all <- lm(allo ~ premc * condD + promc * condD, data=cfl.all)
-summary(rfcfl.promctr.all) # premc:condD b = -7.98, p = .046
+summary(rfcfl.promctr.all)
 ```
 
 ```{r primarymodelalltable, include = FALSE}
