@@ -28,7 +28,8 @@ library(cocron) # Required to statistically compare Cronbach's alphas
 library(broom) # Required to extract effects from models
 library(rIP) # Required to filter out fraudulent M-Turk participants
 library(ggplot2) # Required for plots
-library(jtools) # Required for simple slopes and Johnson-Neyman analysis
+library(jtools) # IN ORIGINAL SUBMISSION: Required for Johnson-Neyman and simple slopes analyses
+library(interactions) # IN REVISION (DUE TO PACKAGE UPDATE): Required for Johnson-Neyman and simple slopes analyses
 library(cowplot) # Required for sim_slopes
 library(Hmisc) # Required for correlation matrix
 library(kableExtra) # Required for table styling
@@ -36,7 +37,16 @@ library(boot) # Required for bootstrapping CIs in mediation analysis
 library(lavaan) # Required for mediation analyses
 library(semPlot) # Required to plot mediation models
 
-# Define functinos
+# Set ggplot theme
+mytheme = theme_classic(base_size = 14) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.title = element_text(hjust = 0.5))
+theme_set(mytheme)
+
+# Define functions
 summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
                       conf.interval=.95, .drop=TRUE) {
   library(plyr)
@@ -276,6 +286,9 @@ cflorig.alloexcl <- cflorig[ which(is.na(cflorig$allo) == FALSE ) , ]
 cflorig.prevexcl <- cflorig.alloexcl[ which(is.na(cflorig.alloexcl$prev) == FALSE ) , ]
 cflorig.ivdvexcl.n <- 500 - nrow(cflorig.prevexcl)
 
+# Saving a dataframe that includes every single participant who completed the IV and DV
+cfl.all <- cflorig.prevexcl # n = 481
+
 # Identifying participants with fraudulent IP addresses
 cflexcl <- cflorig.prevexcl
 # blockornot <- getIPinfo(cflexcl1, "IPAddress", "[key]") # Commented out to avoid rerunning
@@ -290,17 +303,17 @@ cflexcl <- merge(cflexcl, blockornot, by = "IPAddress")
 cflexcl$block12 <- ifelse(cflexcl$block == "0", 0, 1)
 cflexcl$block <- as.numeric(cflexcl$block)
 cflexcl$block.d <- ifelse(cflexcl$block == 1, 1, 0)
-cflexcl.blocked <- cflexcl[cflexcl$block.d == 0,] # n = 334
-cflexcl.blocked.usonly <- cflexcl.blocked[cflexcl.blocked$countryCode == "US",] # n = 301
+cflexcl.blocked <- cflexcl[cflexcl$block.d == 0,]
+cflexcl.blocked.usonly <- cflexcl.blocked[cflexcl.blocked$countryCode == "US",]
 cfl.ipexcl <- cflexcl.blocked.usonly
-cflexcl.allblocked.n <- nrow(cflorig.prevexcl) - nrow(cfl.ipexcl) # n = 180
+cflexcl.allblocked.n <- nrow(cflorig.prevexcl) - nrow(cfl.ipexcl)
 
 # Comparing internal reliability of fraudulent vs. non-fraudulent responses
 # Cronbach alpha when blocking 1s only
 cflexcl.a <- select(cflexcl, rfq_2r, rfq_4r, rfq_5, rfq_6r, rfq_8r, block.d)
-cflexcl.a.noblock <- subset(cflexcl.a, block.d == 0) # n = 334
+cflexcl.a.noblock <- subset(cflexcl.a, block.d == 0)
 cflexcl.a.noblock$block.d <- NULL # Removing column so I can calculate Cronbach's alpha below
-cflexcl.a.block <- subset(cflexcl.a, block.d == 1) # n = 147
+cflexcl.a.block <- subset(cflexcl.a, block.d == 1)
 cflexcl.a.block$block.d <- NULL # Removing column so I can calculate Cronbach's alpha below
 a.noblock <- psych::alpha(cflexcl.a.noblock)$total$std.alpha # Cronbach's alpha of unblocked group = 0.86
 a.block <- psych::alpha(cflexcl.a.block)$total$std.alpha # Cronbach's alpha of blocked group = 0.55
@@ -313,8 +326,8 @@ varunblocked <- mean(cflexcl$prev.var[cflexcl$block != 1], na.rm = TRUE) # avera
 vartest <- t.test(prev.var ~ block.d, data = cflexcl)
 
 # Excluding fraudulent responses
-cflexcl.blocked <- cflexcl[cflexcl$block.d == 0,] # Blocking flagged as "1"; n = 334
-cflexcl.blocked.usonly <- cflexcl.blocked[cflexcl.blocked$countryCode == "US",] # n = 301
+cflexcl.blocked <- cflexcl[cflexcl$block.d == 0,] # Blocking flagged as "1"
+cflexcl.blocked.usonly <- cflexcl.blocked[cflexcl.blocked$countryCode == "US",]
 cfl.ipexcl <- cflexcl.blocked.usonly
 cfl <- cflexcl.blocked.usonly
 cfl.postip <- nrow(cfl)
@@ -326,16 +339,16 @@ cfl.noprevinv.pct <- myround((nrow(cfl.ipexcl)-nrow(cfl.noprevinv))/nrow(cfl.ipe
 # Under 10%, so will not exclude
 
 ## Determining participants who were not told about study from other M-Turkers
-cfl.didntlearn <- subset(cfl.ipexcl, told_test != 1) # n = 295
-cfl.didntlearn.n <- nrow(cfl.ipexcl)-nrow(cfl.didntlearn) # n = 6
+cfl.didntlearn <- subset(cfl.ipexcl, told_test != 1)
+cfl.didntlearn.n <- nrow(cfl.ipexcl)-nrow(cfl.didntlearn)
 cfl.didntlearn.pct <- myround((nrow(cfl.ipexcl)-nrow(cfl.didntlearn))/nrow(cfl.ipexcl) * 100, digits = 2)
 # Over 10%, so will exclude in primary analyses (and will also rerun including this group)
 
 # Redefining dataset to reflect exclusions (per pre-registration; to be edited
 # if either excluded group is >10%)
 # cfl <- subset(cfl, previnvested != 1) NOT EXCLUDED BECAUSE >10%
-cfl.rerun <- cfl.ipexcl # n = 301
-cfl <- subset(cfl.ipexcl, told_test != 1) # n = 295
+cfl.rerun <- cfl.ipexcl
+cfl <- subset(cfl.ipexcl, told_test != 1)
 
 n <- length(unique(cfl$ResponseId))
 
@@ -358,7 +371,7 @@ cfl.cflcond <- subset(cfl, condition == "CF Loss") # n = 142
 cfl.ctrlcond <- subset(cfl, condition == "Control") # n = 153
 
 ## Saving cleaned dataframes
-save(cfl, blockornot, cflorig, cflexcl1, cflexcl, cfl.cflcond, cfl.ctrlcond, file = "data/rfcfloss_clean.RData")
+save(cfl, blockornot, cflorig, cflexcl1, cflexcl, cfl.cflcond, cfl.ctrlcond, cfl.all, file = "data/rfcfloss_clean.RData")
 write.csv(cfl, file = "data/rfcfloss_clean.csv")
 
 ## Calculating descriptive statistics for demographic variables
@@ -803,7 +816,8 @@ index.mod.med := a3*b1
 #                                   bootstrap = 5000)
 # save(Mod.Med.SEM.promctr.regret, file = "models/regretPromctrFit.RData")
 
-load("models/regretPromctrFit.RData")
+# Load model - Once model is generated and saved using code above, can load using this next line
+# load("models/regretPromctrFit.RData")
 summary(Mod.Med.SEM.promctr.regret,
         fit.measures = FALSE,
         standardize = TRUE,
@@ -918,7 +932,8 @@ index.mod.med := a3*b1
 #                                    bootstrap = 5000)
 # save(Mod.Med.SEM.promctr.happier, file = "models/happierPromctrFit.RData")
 
-load("models/happierPromctrFit.RData")
+# Load model - Once model is generated and saved using code above, can load using this next line
+# load("models/happierPromctrFit.RData")
 summary(Mod.Med.SEM.promctr.happier,
         fit.measures = FALSE,
         standardize = TRUE,
@@ -1032,7 +1047,8 @@ index.mod.med := a3*b1
 #                                     bootstrap = 5000)
 # save(Mod.Med.SEM.promctr.relieved, file = "models/relievedPromctrFit.RData")
 
-load("models/relievedPromctrFit.RData")
+# Load model - Once model is generated and saved using code above, can load using this next line
+# load("models/relievedPromctrFit.RData")
 summary(Mod.Med.SEM.promctr.relieved,
         fit.measures = FALSE,
         standardize = TRUE,
@@ -1119,23 +1135,9 @@ cfl.rerun.ctrlcond <- subset(cfl.rerun, condition == "Control") # n = 157
 save(cfl.rerun, cfl.rerun.cflcond, cfl.rerun.ctrlcond, file = "data/rfcfloss_rerun_clean.RData")
 write.csv(cfl.rerun, file = "data/rfcfloss_rerun_clean.csv")
 
-# Descriptive plot
-# summarySE() function defined at top of document
-cfl.rerun.summary <- summarySE(cfl.rerun, measurevar="allo", groupvars=c("hiloprev","condition"))
-rerunplot <- ggplot(data=cfl.rerun, aes(x = hiloprev, y = allo, color = hiloprev)) +
-  facet_wrap(. ~ condition) +
-  geom_jitter() +
-  geom_errorbar(data = cflsummary, aes(ymin = allo - se, ymax = allo + se),
-                col = "black", size = .5) +
-  geom_point(data = cflsummary, col = "black", size = 3, alpha = 1) +
-  scale_x_discrete(labels = c("High", "Low")) +
-  labs(title="RERUN: Bitcoin Allocation By Counterfactual Loss and\nPrevention Pride (NOTE: Does Not Control\nfor Effects of Promotion Pride)", x="Prevention Pride (Median-Split)", y="Bitcoin Allocation (%)") +
-  theme(legend.position = "none")
-rerunplot
-
 ## Primary linear analysis and table generation
 rfcfl.promctr.rerun <- lm(allo ~ premc * condD + promc * condD, data=cfl.rerun)
-summary(rfcfl.promctr.rerun) # premc:condD b = -11.973, p = .0292
+summary(rfcfl.promctr.rerun)
 table1r <- tidy(rfcfl.promctr.rerun)
 table1r <- dplyr::rename(table1r, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
 table1r$Estimate <- myround(table1r$Estimate, digits = 2)
@@ -1175,13 +1177,13 @@ rfcfl.promctr.pred.CFL.rerun <- dplyr::rename(rfcfl.promctr.pred.CFL.rerun, allo
 
 ggplot(data=cfl.rerun, aes(x=premc, y=allo)) +
   scale_color_manual(values=c("gray0", "gray50")) +
-  geom_ribbon(data = rfcfl.promctr.pred.ctrl, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
-  geom_ribbon(data = rfcfl.promctr.pred.CFL, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
-  geom_line(data = rfcfl.promctr.pred.ctrl, aes(color=condition), size = 1) +
-  geom_line(data = rfcfl.promctr.pred.CFL, aes(color=condition), size = 1) +
+  geom_ribbon(data = rfcfl.promctr.pred.ctrl.rerun, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+  geom_ribbon(data = rfcfl.promctr.pred.CFL.rerun, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+  geom_line(data = rfcfl.promctr.pred.ctrl.rerun, aes(color=condition), size = 1) +
+  geom_line(data = rfcfl.promctr.pred.CFL.rerun, aes(color=condition), size = 1) +
   labs(title="RERUN: Prevention Pride and Counterfactual Loss as\nPredictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride (Mean-Centered)", y="Bitcoin Allocation (%)", color = "Condition")
 
-# Simple Slopes and Johnson-Neyman Analyses
+# Simple Slope Analysis
 
 jn1.rerun <- sim_slopes(model = rfcfl.promctr.rerun, pred = premc, modx = condD, modx.values = c(0,1),
                         centered = "all", data = cfl, cond.int = FALSE,
@@ -1189,16 +1191,6 @@ jn1.rerun <- sim_slopes(model = rfcfl.promctr.rerun, pred = premc, modx = condD,
                         digits = getOption("jtools-digits", default = 2), pvals = TRUE,
                         confint = TRUE, ci.width = 0.95)
 jn1.rerun <- tidy(jn1.rerun)
-
-rfcfl.promctr.nonstd.rerun <- lm(allo ~ prev * condD + promc * condD, data=cfl.rerun)
-jn2.rerun <- sim_slopes(model = rfcfl.promctr.nonstd.rerun, pred = condD, modx = prev, modx.values = c(2.50991, 4.572230), 
-                        centered = "all", data = cfl, cond.int = FALSE,
-                        johnson_neyman = TRUE, jnplot = TRUE, jnalpha = 0.05, robust = FALSE,
-                        digits = getOption("jtools-digits", default = 2), pvals = TRUE,
-                        confint = TRUE, ci.width = 0.95)
-jncutoff_low.rerun <- jn2.rerun$jn[[1]]$bounds[1]
-jncutoff_high.rerun <- jn2.rerun$jn[[1]]$bounds[2]
-jn2.rerun <- tidy(jn2.rerun)
 
 ## Exploratory Mediation Analysis (Hayes PROCESS Model 8): Counterfactual Relief
 
@@ -1211,7 +1203,8 @@ jn2.rerun <- tidy(jn2.rerun)
 #                                           bootstrap = 5000)
 # save(Mod.Med.SEM.promctr.relieved.rerun, file = "models/relievedPromctrFitRerun.RData")
 
-load("models/relievedPromctrFitRerun.RData")
+# Load model - Once model is generated and saved using code above, can load using this next line
+# load("models/relievedPromctrFitRerun.RData")
 summary(Mod.Med.SEM.promctr.relieved.rerun,
         fit.measures = FALSE,
         standardize = TRUE,
@@ -1285,3 +1278,161 @@ medmodel.relieved.rerun <- table2.relieved.rerun %>%
   row_spec(0, align = "c") %>%
   footnote(general = "This analysis included an effect-coded variable for the counterfactual loss experience: -1 = control, 1 = counterfactual loss. Additionally, all other variables were standardized (M = 0, SD = 1) within this model. Estimated effect sizes for the models reported here are standardized regression coefficients.", general_title = "Note: ", footnote_as_chunk = T, title_format = c("italic"), threeparttable = TRUE, escape = FALSE)
 medmodel.relieved.rerun
+
+# Rerunning with All Participants Who Completed Independent Measure (Regulatory Focus Questionnaire) and Dependent Measure (Bitcoin Allocation)
+
+# Creating subset to count participants each condition
+cfl.all.cflcond <- subset(cfl.all, condition == "CF Loss") # n = 239
+cfl.all.ctrlcond <- subset(cfl.all, condition == "Control") # n = 242
+
+# SAVING CLEAN DATASETS
+save(cfl.all, cfl.all.cflcond, cfl.all.ctrlcond, file = "data/rfcfloss_all_clean.RData")
+write.csv(cfl.all, file = "data/rfcfloss_all_clean.csv")
+
+## Primary linear analysis and table generation
+rfcfl.promctr.all <- lm(allo ~ premc * condD + promc * condD, data=cfl.all)
+summary(rfcfl.promctr.all)
+table1a <- tidy(rfcfl.promctr.all)
+table1a <- dplyr::rename(table1a, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1a$Estimate <- myround(table1a$Estimate, digits = 2)
+table1a$SE <- myround(table1a$SE, digits = 2)
+table1a$t <- myround(table1a$t, digits = 2)
+table1a$p <- myround(table1a$p, digits = 3)
+table1a$p[table1a$p < .001] <- "< .001"
+table1a$Predictor[table1a$Predictor == "(Intercept)"] <- "Intercept"
+table1a$Predictor[table1a$Predictor == "premc"] <- "Prevention Pride"
+table1a$Predictor[table1a$Predictor == "condD"] <- "Counterfactual Loss"
+table1a$Predictor[table1a$Predictor == "promc"] <- "Promotion Pride"
+table1a$Predictor[table1a$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1a$Predictor[table1a$Predictor == "condD:promc"] <- "Promotion Pride x Counterfactual Loss"
+table1a[is.na(table1a)] <- ""
+table1a$order <- c(1, 2, 3, 5, 4, 6)
+table1a <- arrange(table1a, order)
+table1a$order <- NULL
+apa_table(table1a, caption = "RERUN (ALL): Summary of Linear Regression Analysis", note = "This analysis included a dummy-coded variable for the counterfactual loss manipulation: 0 = control, 1 = counterfactual loss. Additionally, prevention and promotion pride were mean-centered within this model. Estimated effect sizes reported here are unstandardized regression coefficients.", align = 'lrrrr')
+
+# Generating graph with results of rerun primary linear analysis
+pred.data.ctrl.all <- data.frame(premc = seq(min(cfl.all$premc, na.rm=T), 
+                                             max(cfl.all$premc, na.rm=T), .1),
+                                 promc = 0, condD = 0, condition = "Control")
+rfcfl.promctr.pred.ctrl.all <- cbind(pred.data.ctrl.all, 
+                                     predict(rfcfl.promctr.all, pred.data.ctrl.all, 
+                                             interval = "confidence", 
+                                             type = c("response", "terms")))
+rfcfl.promctr.pred.ctrl.all <- dplyr::rename(rfcfl.promctr.pred.ctrl.all, allo = fit)
+
+pred.data.CFL.all <- data.frame(premc = seq(min(cfl.all$premc, na.rm=T), 
+                                            max(cfl.all$premc, na.rm=T), .1),
+                                promc = 0, condD = 1, condition = "CF Loss")
+rfcfl.promctr.pred.CFL.all <- cbind(pred.data.CFL.all, 
+                                    predict(rfcfl.promctr.all, pred.data.CFL.all, 
+                                            interval = "confidence", 
+                                            type = c("response", "terms")))
+rfcfl.promctr.pred.CFL.all <- dplyr::rename(rfcfl.promctr.pred.CFL.all, allo = fit)
+
+ggplot(data=cfl.all, aes(x=premc, y=allo)) +
+  scale_color_manual(values=c("gray0", "gray50")) +
+  geom_ribbon(data = rfcfl.promctr.pred.ctrl.all, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+  geom_ribbon(data = rfcfl.promctr.pred.CFL.all, aes(ymin = lwr, ymax = upr), alpha = .3, fill = "gray") +
+  geom_line(data = rfcfl.promctr.pred.ctrl.all, aes(color=condition), size = 1) +
+  geom_line(data = rfcfl.promctr.pred.CFL.all, aes(color=condition), size = 1) +
+  labs(title="RERUN (ALL): Prevention Pride and Counterfactual\nLoss as Predictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride (Mean-Centered)", y="Bitcoin Allocation (%)", color = "Condition")
+
+# Simple Slope Analysis
+
+jn1.all <- sim_slopes(model = rfcfl.promctr.all, pred = premc, modx = condD, modx.values = c(0,1),
+                      centered = "all", data = cfl, cond.int = FALSE,
+                      johnson_neyman = FALSE, jnplot = FALSE, jnalpha = 0.05, robust = FALSE,
+                      digits = getOption("jtools-digits", default = 2), pvals = TRUE,
+                      confint = TRUE, ci.width = 0.95)
+jn1.all <- tidy(jn1.all)
+
+## Exploratory Mediation Analysis (Hayes PROCESS Model 8): Counterfactual Relief
+
+# Fit model (no changes in model from original specification)
+# set.seed(1234)
+# Mod.Med.SEM.promctr.relieved.all <- sem(model = Mod.Med.Lavaan.promctr.Relieved,
+#                                         data = cfl.all,
+#                                         se = "bootstrap",
+#                                         bootstrap = 5000)
+# 
+# save(Mod.Med.SEM.promctr.relieved.all, file = "models/relievedPromctrFitAll.RData")
+
+# Load model - Once model is generated and saved using code above, can load using this next line
+# load("models/relievedPromctrFitAll.RData")
+load("models/relievedPromctrFitAll.RData")
+summary(Mod.Med.SEM.promctr.relieved.all,
+        fit.measures = FALSE,
+        standardize = TRUE,
+        estimates = TRUE,
+        ci = TRUE,
+        rsquare = TRUE)
+
+relievedPromctrCoefs.all <- parameterEstimates(Mod.Med.SEM.promctr.relieved.all)
+a3.relieved.promctr.all <- relievedPromctrCoefs.all$est[relievedPromctrCoefs.all$label == "a3"]
+a3.p.relieved.promctr.all <- relievedPromctrCoefs.all$pvalue[relievedPromctrCoefs.all$label == "a3"]
+b.relieved.promctr.all <- relievedPromctrCoefs.all$est[relievedPromctrCoefs.all$label == "b1"]
+b.p.relieved.promctr.all <- relievedPromctrCoefs.all$pvalue[relievedPromctrCoefs.all$label == "b1"]
+condIndEffctrl.relieved.promctr.all <- relievedPromctrCoefs.all$est[relievedPromctrCoefs.all$label == "indirect.ctrl"]
+condIndEffctrl.se.relieved.promctr.all <- relievedPromctrCoefs.all$se[relievedPromctrCoefs.all$label == "indirect.ctrl"]
+condIndEffctrl.cilower.relieved.promctr.all <- relievedPromctrCoefs.all$ci.lower[relievedPromctrCoefs.all$label == "indirect.ctrl"]
+condIndEffctrl.ciupper.relieved.promctr.all <- relievedPromctrCoefs.all$ci.upper[relievedPromctrCoefs.all$label == "indirect.ctrl"]
+condIndEffCFL.relieved.promctr.all <- relievedPromctrCoefs.all$est[relievedPromctrCoefs.all$label == "indirect.CFL"]
+condIndEffCFL.se.relieved.promctr.all <- relievedPromctrCoefs.all$se[relievedPromctrCoefs.all$label == "indirect.CFL"]
+condIndEffCFL.cilower.relieved.promctr.all <- relievedPromctrCoefs.all$ci.lower[relievedPromctrCoefs.all$label == "indirect.CFL"]
+condIndEffCFL.ciupper.relieved.promctr.all <- relievedPromctrCoefs.all$ci.upper[relievedPromctrCoefs.all$label == "indirect.CFL"]
+
+table2.relieved.all <- relievedPromctrCoefs.all
+table2.relieved.all <- dplyr::rename(table2.relieved.all, Predictor = rhs, Estimate = est, SE = se, p = pvalue, CI.lower = ci.lower, CI.upper = ci.upper)
+table2.relieved.all$label <- NULL
+table2.relieved.all <- table2.relieved.all[table2.relieved.all$op != "~~",]
+table2.relieved.all$Predictor[table2.relieved.all$lhs == "relieved.s" & table2.relieved.all$op == "~1"] <- "Intercept"
+table2.relieved.all$op[table2.relieved.all$lhs == "relieved.s" & table2.relieved.all$op == "~1"] <- "~"
+table2.relieved.all$Predictor[table2.relieved.all$lhs == "allo.s" & table2.relieved.all$op == "~1"] <- "Intercept"
+table2.relieved.all$op[table2.relieved.all$lhs == "allo.s" & table2.relieved.all$op == "~1"] <- "~"
+table2.relieved.all <- table2.relieved.all[table2.relieved.all$op != "~1",]
+table2.relieved.all <- table2.relieved.all[1:15,]
+table2.relieved.all <- table2.relieved.all %>%
+  mutate(section = recode(lhs, relieved.s = 1, allo.s = 2,
+                          indirect.ctrl = 3, indirect.CFL = 4)) %>%
+  arrange(section,desc(op))
+table2.relieved.all$Predictor[table2.relieved.all$lhs == "indirect.ctrl"] <- "Control Condition"
+table2.relieved.all$Predictor[table2.relieved.all$lhs == "indirect.CFL"] <- "Counterfactual Loss Condition"
+table2.relieved.all$Estimate <- myround(table2.relieved.all$Estimate, digits = 2)
+table2.relieved.all$SE <- myround(table2.relieved.all$SE, digits = 2)
+table2.relieved.all$z <- myround(table2.relieved.all$z, digits = 2)
+table2.relieved.all$p <- myround(table2.relieved.all$p, digits = 3)
+table2.relieved.all$CI.lower <- myround(table2.relieved.all$CI.lower, digits = 4)
+table2.relieved.all$CI.upper <- myround(table2.relieved.all$CI.upper, digits = 4)
+table2.relieved.all$p[table2.relieved.all$p < .001] <- "< .001"
+table2.relieved.all$Predictor[table2.relieved.all$Predictor == "premc.s"] <- "Prevention Pride"
+table2.relieved.all$Predictor[table2.relieved.all$Predictor == "condE"] <- "Counterfactual Loss"
+table2.relieved.all$Predictor[table2.relieved.all$Predictor == "promc.s"] <- "Promotion Pride"
+table2.relieved.all$Predictor[table2.relieved.all$Predictor == "premc.s:condE"] <- "Prev. Pride x CF Loss"
+table2.relieved.all$Predictor[table2.relieved.all$Predictor == "condE:promc.s"] <- "Prom. Pride x CF Loss"
+table2.relieved.all$Predictor[table2.relieved.all$Predictor == "relieved.s"] <- "Hypothetical Relief"
+table2.relieved.all[is.na(table2.relieved.all)] <- ""
+table2.relieved.all$lhs <- NULL
+table2.relieved.all$op <- NULL
+table2.relieved.all$section <- NULL
+table2.relieved.all$order <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 10, 11, 12, 14, 15)
+table2.relieved.all <- arrange(table2.relieved.all, order)
+table2.relieved.all$order <- NULL
+
+medmodel.relieved.all <- table2.relieved.all %>%
+  mutate(
+    Estimate = cell_spec(Estimate, "latex", align = "r"),
+    SE = cell_spec(SE, "latex", align = "r"),
+    z = cell_spec(z, "latex", align = "r"),
+    p = cell_spec(p, "latex", align = "r"),
+    CI.lower = cell_spec(CI.lower, "latex", align = "r"),
+    CI.upper = cell_spec(CI.upper, "latex", align = "r")
+  ) %>%
+  kable("latex", booktabs = TRUE, escape = FALSE, caption = "Summary of Exploratory Mediation Analysis") %>%
+  kable_styling(latex_options = c("scale_down", "HOLD_position")) %>%
+  group_rows("Model 1 (DV = Hypothetical Relief)", 1, 6) %>%
+  group_rows("Model 2 (DV = Bitcoin Allocation)", 7, 13) %>%
+  group_rows("Bootstrapped Conditional Indirect Effects\n(Prev. Pride x CF Loss → Hypothetical Relief → Bitcoin Allocation)", 14, 15) %>%
+  row_spec(0, align = "c") %>%
+  footnote(general = "This analysis included an effect-coded variable for the counterfactual loss experience: -1 = control, 1 = counterfactual loss. Additionally, all other variables were standardized (M = 0, SD = 1) within this model. Estimated effect sizes for the models reported here are standardized regression coefficients.", general_title = "Note: ", footnote_as_chunk = T, title_format = c("italic"), threeparttable = TRUE, escape = FALSE)
+medmodel.relieved.all
