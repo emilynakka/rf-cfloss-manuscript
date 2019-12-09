@@ -5,6 +5,9 @@
 ### Although this R script contains all analyses, the full manuscript (including the analyses
 ### contained here) can be generated using the R Markdown file located on this Open Science
 ### Framework page: https://osf.io/e4nr3/?view_only=73c8490e19c6449197d2620d29ea8ad2
+###
+### Additionally, this R script begins with cleaned data. To review the full cleaning script,
+### please see the Supplementary Materials R script.
 
 # Load packages
 library(knitr) # Required for knitting
@@ -32,19 +35,28 @@ set.seed(1234)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, include = FALSE, message = FALSE)
 knitr::opts_knit$set(root.dir = normalizePath('../'))
 
-# Define functions
+# Set ggplot theme
+mytheme = theme_classic(base_size = 14) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.title = element_text(hjust = 0.5))
+theme_set(mytheme)
+
+# Functions
 pval <- function(x) {
   if (x >= .05) {
     result <- "n.s."
   }
   else if (x < .05 & x >= .01) {
-    result <- "p < .05"
+    result <- "p<.05"
   }
   else if (x < .01 & x >= .001) {
-    result <- "p < .01"
+    result <- "p<.01"
   }
   else {
-    result <- "p < .001"
+    result <- "p<.001"
   }
   return(result)
 }
@@ -52,6 +64,9 @@ pval <- function(x) {
 # Load cleaned data (full cleaning script can be found in Supplementary Materials)
 load(file = "data/rfcfloss_clean.RData")
 load(file = "data/rfcfloss_coded.RData")
+
+cfl_digivest <- filter(cflorig, digivest_accept == 1)
+# Of participants who completed the study and submitted an M-Turk code, 496 participated in both parts
 
 ## Excluding participants who did not submit a Bitcoin allocation percentage (our DV)
 cflorig.alloexcl <- cflorig[ which(is.na(cflorig$allo) == FALSE ) , ] # n = 482 remaining
@@ -106,12 +121,24 @@ male <- sum(cfl$gender == "male")
 female <- sum(cfl$gender == "female")
 malepct <- myround(male/nrow(cfl)*100, digits = 2)
 femalepct <- myround(female/nrow(cfl)*100, digits = 2)
+white <- sum(cfl$ethnicity == "white")
+whitepct <- myround(white/nrow(cfl)*100, digits = 2)
+hisp <- sum(cfl$ethnicity == "hispanic")
+hisppct <- myround(hisp/nrow(cfl)*100, digits = 2)
+black <- sum(cfl$ethnicity == "black")
+blackpct <- myround(black/nrow(cfl)*100, digits = 2)
+asian <- sum(cfl$ethnicity == "asian")
+asianpct <- myround(asian/nrow(cfl)*100, digits = 2)
 
 # Calculating key descriptive statistics
 prommean <- myround(mean(cfl$prom), digits = 2)
 promsd <- myround(sd(cfl$prom), digits = 2)
+prom <- select(cfl, rfq_1r, rfq_3, rfq_7, rfq_9r, rfq_10, rfq_11r)
+promalpha <- myround(psych::alpha(prom)$total["raw_alpha"], digits = 2)
 prevmean <- myround(mean(cfl$prev), digits = 2)
 prevsd <- myround(sd(cfl$prev), digits = 2)
+prev <- select(cfl, rfq_2r, rfq_4r, rfq_5, rfq_6r, rfq_8r)
+prevalpha <- myround(psych::alpha(prev)$total["raw_alpha"], digits = 2)
 investearliermean <- myround(mean(cfl$investearlier, na.rm = TRUE), digits = 2)
 investearliersd <- myround(sd(cfl$investearlier, na.rm = TRUE), digits = 2)
 missedoutmean <- myround(mean(cfl$missedout, na.rm = TRUE), digits = 2)
@@ -186,6 +213,17 @@ table1.rerun$p <- myround(table1.rerun$p, digits = 3)
 table1.rerun$p[table1.rerun$p < .001] <- "< .001"
 table1.rerun$Predictor[table1.rerun$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
 table1.rerun[is.na(table1.rerun)] <- ""
+
+# Original model, rerun to include all possible participants
+# (i.e., all 481 who completed our independent and dependent measures)
+rfcfl.promctr.all <- lm(allo ~ premc * condD + promc * condD, data=cfl.all)
+table1.rerun.all <- tidy(rfcfl.promctr.all)
+table1.rerun.all <- dplyr::rename(table1.rerun.all, Predictor = term, Estimate = estimate, SE = std.error, t = statistic, p = p.value)
+table1.rerun.all$Estimate <- myround(table1.rerun.all$Estimate, digits = 2)
+table1.rerun.all$p <- myround(table1.rerun.all$p, digits = 3)
+table1.rerun.all$p[table1.rerun.all$p < .001] <- "<.001"
+table1.rerun.all$Predictor[table1.rerun.all$Predictor == "premc:condD"] <- "Prevention Pride x Counterfactual Loss"
+table1.rerun.all[is.na(table1.rerun.all)] <- ""
 
 # Simple slopes analysis
 jn1 <- sim_slopes(model = rfcfl.promctr.nonstd, pred = premc, modx = condD, modx.values = c(0,1),
@@ -304,7 +342,8 @@ index.mod.med := a3*b1
 #                                     bootstrap = 5000)
 # save(Mod.Med.SEM.promctr.relieved, file = "models/relievedFitFinal.RData")
 
-load("models/relievedFitFinal.RData")
+# Load model - Once model is generated and saved using code above, can load using this next line
+# load("models/relievedFitFinal.RData")
 
 relievedPromctrCoefs <- parameterEstimates(Mod.Med.SEM.promctr.relieved)
 a3.relieved.promctr <- relievedPromctrCoefs$est[relievedPromctrCoefs$label == "a3"]
