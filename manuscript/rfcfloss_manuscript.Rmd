@@ -147,7 +147,7 @@ cfl_digivest <- filter(cflorig, digivest_accept == 1) # Of participants who comp
 
 ## 2.1.  Participants
 
-A pilot study examining the interaction between prevention and risk-taking following counterfactual loss suggested an $f^2$ effect size of 0.021. A power analysis suggested a sample size of 462; to account for attrition, we enrolled 500 participants. (See https://osf.io/e4nr3/?view_only=73c8490e19c6449197d2620d29ea8ad2 for pre-registration, data, and syntax.)
+A pilot study examining the interaction between prevention and risk-taking following counterfactual loss suggested an $f^2$ effect size of 0.021. A power analysis suggested a sample size of 462; to account for attrition, we enrolled 500 participants. (See https://osf.io/e4nr3/ for pre-registration, data, and syntax.)
 
 ```{r bit.na}
 ## Excluding participants who did not submit a Bitcoin allocation percentage (our DV)
