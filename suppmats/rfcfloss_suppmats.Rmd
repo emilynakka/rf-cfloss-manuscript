@@ -1,6 +1,6 @@
 ---
 title: "Does Your Gain Define My Loss?: Socially-Defined Counterfactual Loss and Prevention-Focused Decision-Making (Supplementary Materials)"
-author: "[Anonymized for Blind Peer Review]"
+author: "Emily Nakkawita, Frank Mathmann, & E. Tory Higgins"
 output:
   pdf_document:
     toc: true
@@ -577,7 +577,7 @@ ggplot(data=cfl, aes(x = hiloprev, y = allo, color = hiloprev)) +
 
 ## Hypothesized Model
 
-As described in the article, we were primarily interested in examining if participants' chronic prevention pride interacted with counterfactual loss to predict allocation of one's funds toward a risky investment in Bitcoin. To test our hypothesis, we entered these predictors into a linear regression analysis, the results of which are presented in Table 1. To supplement these results, a visualization of the model's predictions is presented in the following figure. Additionally, we built an application to dynamically generate model predictions using `r cite_r("manuscript/rfcfloss.bib", pkgs = "shiny", withhold = FALSE)`. The application is located online at http://regfocusrisk.com ([Anonymous], 2019).
+As described in the article, we were primarily interested in examining if participants' chronic prevention pride interacted with counterfactual loss to predict allocation of one's funds toward a risky investment in Bitcoin. To test our hypothesis, we entered these predictors into a linear regression analysis, the results of which are presented in Table 1. To supplement these results, a visualization of the model's predictions is presented in the following figure. Additionally, we built an application to dynamically generate model predictions using `r cite_r("manuscript/rfcfloss.bib", pkgs = "shiny", withhold = FALSE)`. The application is located online at https://emilynakka.shinyapps.io/RFCFLoss/ [@nakkawitaetal2019a].
 
 ```{r primarymodel, include = FALSE}
 rfcfl.promctr.nonstd <- lm(allo ~ premc * condD + promc * condD, data = cfl)

@@ -13,21 +13,27 @@ ui <- fluidPage(
     windowTitle = "Regulatory Focus, Counterfactual Loss, and Risky Decision Making: Model Predictions"
   ),
   
-  sidebarPanel(
-    selectInput("condition", "Condition:", 
-                choices=c("CF Loss","Control")),
-    sliderInput("prev", "Prevention Pride:",
-                min = 1, max = 5,
-                value = 3, step = 0.1),
-    sliderInput("prom", "Promotion Pride:",
-                min = 1, max = 5,
-                value = 3, step = 0.1)
-    ),
-  
-  mainPanel(
-    htmlOutput("predstatement"),
-    br(),
-    plotOutput("plot2")
+  sidebarLayout(position = "right",
+                sidebarPanel(
+                  selectInput("condition", "Condition:", 
+                              choices=c("CF Loss","Control")),
+                  sliderInput("prev", "Prevention Pride:",
+                              min = 1, max = 5,
+                              value = 3, step = 0.1),
+                  sliderInput("prom", "Promotion Pride:",
+                              min = 1, max = 5,
+                              value = 3, step = 0.1)
+                ),
+                mainPanel(
+                  htmlOutput("predstatement"),
+                  br(),
+                  plotOutput("plot2"),
+                  br(),
+                  br(),
+                  p(span("References", style = "font-weight:bold")),
+                  p("Nakkawita, E., Mathmann, F., & Higgins, E. T. (in press). Does your gain define my loss?: Socially-defined counterfactual loss and prevention-focused decision-making. ",
+                    span("Personality and Individual Differences.", style = "font-style:italic"))
+                )
   )
 )
 
@@ -55,8 +61,8 @@ server <- function(input, output){
   user.pred <- reactive({
     user.pred <- cbind(user.pred.data(), 
                        predict(rfcfl.promctr(), user.pred.data(), 
-                       interval = "confidence", 
-                       type = c("response", "terms")))
+                               interval = "confidence", 
+                               type = c("response", "terms")))
   })
   
   output$predstatement <- renderText({
@@ -73,8 +79,8 @@ server <- function(input, output){
       geom_line(data = rfcfl.promctr.pred(), color = "black", size = 1) +
       geom_point(data = user.pred(), color = "red", size = 7) +
       labs(title="Prevention Pride and Counterfactual Loss as Predictors of Bitcoin Allocation\n(Controlling for Promotion Pride and the Interaction\nBetween Promotion Pride and Counterfactual Loss)", x="Prevention Pride", y="Bitcoin Allocation (%)", color = "Condition")
-    })
-
-}
+  })
   
+}
+
 shinyApp(ui, server)
